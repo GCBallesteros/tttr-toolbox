@@ -10,7 +10,7 @@ pub mod tttr_tools;
 
 pub(crate) trait TTTRStream {
     type RecordSize;
-    fn parse_record(&mut self, raw_record: Self::RecordSize) -> TTTRRecord;
+    fn parse_record(&mut self, raw_record:  Self::RecordSize) -> TTTRRecord;
     fn time_resolution(&self) -> f64;
 }
 

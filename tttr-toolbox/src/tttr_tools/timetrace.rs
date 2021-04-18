@@ -4,11 +4,19 @@ use crate::errors::Error;
 use crate::parsers::ptu;
 use std::fmt::Debug;
 
-use dict_derive::{FromPyObject, IntoPyObject};
-
 struct TimeTrace<P: TTTRStream + Iterator> {
     pub click_stream: P,
     pub params: TimeTraceParams,
+}
+
+/// Results for the timetrace algorithm
+///
+/// It stores both the intensity trace and the record number of the last click for
+/// each bin in the intensity trace. This makes is possible to implement algorithms
+/// like photon post-selection.
+pub struct TimeTraceResult {
+    pub intensity: Vec<u64>,
+    pub recnum_trace: Vec<u64>,
 }
 
 /// Parameters for the timetrace algorithm
@@ -17,34 +25,36 @@ struct TimeTrace<P: TTTRStream + Iterator> {
 ///   1. resolution: The resolution in seconds of the intensity time trace.
 ///   2. channel: Optional channel we want to monitor. If None is passed then all
 ///      all channels are summed together.
-#[derive(Debug, Copy, Clone, FromPyObject, IntoPyObject)]
+#[derive(Debug, Copy, Clone)]
 pub struct TimeTraceParams {
     pub resolution: f64,
     pub channel: Option<i32>,
 }
 
 impl<P: TTTRStream + Iterator> TimeTrace<P> {
-    fn compute(self) -> Vec<u64> where <P as Iterator>::Item: Debug + Click {
+    fn compute(self) -> TimeTraceResult where <P as Iterator>::Item: Debug + Click {
         let blips_per_bin = (self.params.resolution  / self.click_stream.time_resolution()) as u64;
         let mut trace: Vec<u64> = vec![];
+        let mut recnum_trace: Vec<u64> = vec![];
 
         let mut counter = 0;
         let mut end_of_bin = blips_per_bin;
 
-        for rec in self.click_stream.into_iter() {
-            if *rec.tof() < end_of_bin {
-                if let Some(ch) = self.params.channel {
-                    counter += if *rec.channel() == ch {1} else {0}
-                } else {
-                    counter += if *rec.channel() >= 0 {1} else {0};
-                };
+        for (idx, rec) in self.click_stream.into_iter().enumerate() {
+            if let Some(ch) = self.params.channel {
+                counter += if *rec.channel() == ch {1} else {0}
             } else {
+                counter += if *rec.channel() >= 0 {1} else {0};
+            };
+
+            if *rec.tof() > end_of_bin {
                 trace.push(counter);
+                recnum_trace.push(idx as u64);
                 counter = 0;
                 end_of_bin += blips_per_bin;
             };
         };
-        trace
+        TimeTraceResult{ intensity: trace, recnum_trace: recnum_trace }
     }
 }
 
@@ -63,7 +73,7 @@ impl<P: TTTRStream + Iterator> TimeTrace<P> {
 /// limit to how fine the time resolution can be. Finer resolutions lead to smaller numbers
 /// of clicks per interval and therefore the relative error for the number of counts
 /// grows as we make intervals finer.
-pub fn timetrace(f: &File, params: &TimeTraceParams) -> Result<Vec<u64>, Error> {
+pub fn timetrace(f: &File, params: &TimeTraceParams) -> Result<TimeTraceResult, Error> {
     //let params = TimeTraceParams {resolution: 10, channel: Some(0)};
     match f {
         File::PTU(x) => {
