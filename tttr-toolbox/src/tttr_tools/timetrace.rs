@@ -49,7 +49,7 @@ impl<P: TTTRStream + Iterator> TimeTrace<P> {
 
             if *rec.tof() > end_of_bin {
                 trace.push(counter);
-                recnum_trace.push(idx as u64);
+                recnum_trace.push(idx + start_record as u64);
                 counter = 0;
                 end_of_bin += blips_per_bin;
             };
@@ -74,17 +74,27 @@ impl<P: TTTRStream + Iterator> TimeTrace<P> {
 /// of clicks per interval and therefore the relative error for the number of counts
 /// grows as we make intervals finer.
 pub fn timetrace(f: &File, params: &TimeTraceParams) -> Result<TimeTraceResult, Error> {
-    //let params = TimeTraceParams {resolution: 10, channel: Some(0)};
+    let start_record = None;
+    let stop_record = None;
     match f {
         File::PTU(x) => {
             match x.record_type().unwrap() {
                 RecordType::PHT2 => {
-                    let stream = ptu::streamers::PHT2Stream::new(x)?;
+                    let stream = ptu::streamers::PHT2Stream::new(x, start_record, stop_record)?;
                     let tt = TimeTrace {click_stream: stream, params: *params};
                     Ok(tt.compute())
                 },
+                RecordType::HHT2_HH1 => {
+                    let stream = ptu::streamers::HHT2_HH1Stream::new(x, start_record, stop_record)?;
+                    let tt = TimeTrace {click_stream: stream, params: *params};
+                    Ok(tt.compute())
+                }
+                RecordType::HHT2_HH2 => {
+                    let stream = ptu::streamers::HHT2_HH2Stream::new(x, start_record, stop_record)?;
+                    let tt = TimeTrace {click_stream: stream, params: *params};
+                    Ok(tt.compute())
+                }
                 RecordType::NotImplemented => panic!{"Record type not implemented"},
-                _ => panic!{"Record type not implemented"},
             }
         },
     }
