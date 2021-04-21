@@ -12,6 +12,12 @@ struct G2<P: TTTRStream + Iterator> {
     pub params: G2Params,
 }
 
+/// Result from the g2 algorithm
+pub struct G2Result {
+    pub t: Vec<f64>,
+    pub hist: Vec<u64>,
+}
+
 /// Parameters for the g2 algorithm
 ///
 /// # Parameters
@@ -30,7 +36,8 @@ pub struct G2Params {
 }
 
 impl<P: TTTRStream + Iterator> G2<P> {
-    fn compute(self) -> Vec<u64> where <P as Iterator>::Item: Debug + Click {
+    fn compute(self) -> G2Result where <P as Iterator>::Item: Debug + Click {
+        let real_resolution = self.params.resolution.clone();
         let n_bins = (self.params.correlation_window / self.params.resolution) as u64;
         let correlation_window = self.params.correlation_window / self.click_stream.time_resolution();
 
@@ -73,7 +80,10 @@ impl<P: TTTRStream + Iterator> G2<P> {
                 } 
             }
         };
-        histogram
+        let t = (0..n_bins)
+            .map(|i| ((i as f64) - (central_bin as f64)) * real_resolution)
+            .collect::<Vec<f64>>();
+        G2Result { t: t, hist: histogram}
     }
 }
 
@@ -119,22 +129,24 @@ impl<P: TTTRStream + Iterator> G2<P> {
 /// this should be more than enough to capture any relevant dynamics. If this is
 /// not the case for you will need to modify the hard coded maximum buffer size
 /// defined on `src/tttr_tools/g2.rs`.
-pub fn g2(f: &File, params: &G2Params) -> Result<Vec<u64>, Error> {
+pub fn g2(f: &File, params: &G2Params) -> Result<G2Result, Error> {
+    let start_record = params.start_record;
+    let stop_record = params.stop_record;
     match f {
         File::PTU(x) => {
             match x.record_type().unwrap() {
                 RecordType::PHT2 => {
-                    let stream = ptu::streamers::PHT2Stream::new(x)?;
+                    let stream = ptu::streamers::PHT2Stream::new(x, start_record, stop_record)?;
                     let tt = G2 {click_stream: stream, params: *params};
                     Ok(tt.compute())
                 },
                 RecordType::HHT2_HH1 => {
-                    let stream = ptu::streamers::HHT2_HH1Stream::new(x)?;
+                    let stream = ptu::streamers::HHT2_HH1Stream::new(x, start_record, stop_record)?;
                     let tt = G2 {click_stream: stream, params: *params};
                     Ok(tt.compute())
                 }
                 RecordType::HHT2_HH2 => {
-                    let stream = ptu::streamers::HHT2_HH2Stream::new(x)?;
+                    let stream = ptu::streamers::HHT2_HH2Stream::new(x, start_record, stop_record)?;
                     let tt = G2 {click_stream: stream, params: *params};
                     Ok(tt.compute())
                 }
