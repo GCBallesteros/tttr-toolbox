@@ -74,18 +74,32 @@ pub fn make_ptu_stream(args: TokenStream, item: TokenStream) -> TokenStream {
         }
 
         impl #stream_name {
-            pub fn new(ptu_file: &ptu::PTUFile) -> Result<Self, Error> {
+            pub fn new(ptu_file: &ptu::PTUFile, start_record: Option<usize>, stop_record: Option<usize>) -> Result<Self, Error> {
                 let header = &ptu_file.header;
                 let number_of_records: i64 = read_ptu_tag!(header[TAG_NUM_RECORDS] as Int8);
                 let data_offset: i64 = read_ptu_tag!(header["DataOffset"] as Int8);
 
                 let mut buffered = BufReader::with_capacity(8*1024, std::fs::File::open(ptu_file.path.clone())?);
-                buffered.seek(SeekFrom::Start(data_offset as u64))?;
+
+                let record_offset = if let Some(offset) = start_record {
+                    offset as i64
+                } else {
+                    0 as i64
+                };
+
+                let last_record = if let Some(last) = stop_record {
+                    last as i64
+                } else {
+                    number_of_records as i64
+                };
+
+                // 4 bytes per record
+                buffered.seek(SeekFrom::Start(((data_offset as u64) + (4*record_offset) as u64)))?;
 
                 Ok(Self {
                     source: buffered,
                     click_buffer: [0; BUFFER_SIZE],
-                    num_records: number_of_records as usize,
+                    num_records: (last_record - record_offset) as usize,
                     time_resolution: ptu_file.time_resolution()?,
                     photons_in_buffer: 0,
                     click_count: 0,
@@ -115,6 +129,7 @@ pub fn make_ptu_stream(args: TokenStream, item: TokenStream) -> TokenStream {
                         }
                         return None
                     };
+                    if self.click_count >= self.num_records {return None};
                     self.photons_in_buffer = BUFFER_SIZE as i32;
                 }
 

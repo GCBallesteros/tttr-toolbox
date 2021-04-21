@@ -33,7 +33,7 @@ pub fn main() {
     };
     //g2_resolution = 600 * 1e-12  # picoseconds * 1e-12 to change to seconds
     //g2_window = 50000 * 1e-12
-    let g2_histogram = g2(&ptu_file, &params);
+    let g2_histogram = g2(&ptu_file, &params).unwrap();
     eprintln!("elapsed {:?}", start.elapsed());
-    println!("{:?}", g2_histogram);
+    println!("{:?}", g2_histogram.hist);
 }
