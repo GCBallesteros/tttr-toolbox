@@ -10,7 +10,7 @@ pub mod tttr_tools;
 
 pub(crate) trait TTTRStream {
     type RecordSize;
-    fn parse_record(&mut self, raw_record:  Self::RecordSize) -> TTTRRecord;
+    fn parse_record(&mut self, raw_record: Self::RecordSize) -> TTTRRecord;
     fn time_resolution(&self) -> f64;
 }
 
@@ -27,16 +27,18 @@ pub(crate) trait Click {
 
 impl Click for TTTRRecord {
     #[inline]
-    fn channel(&self) -> &i32 {&self.channel}
+    fn channel(&self) -> &i32 {
+        &self.channel
+    }
     #[inline]
-    fn tof(&self) -> &u64 {&self.tof}
-
+    fn tof(&self) -> &u64 {
+        &self.tof
+    }
 }
 
 /// The TTTRFile trait ensures that all files we support are aware of the time_resolution
-/// they support and the what type of records they contain. This is neccessary 
+/// they support and the what type of records they contain. This is neccessary
 pub trait TTTRFile {
     fn time_resolution(&self) -> Result<f64, errors::Error>;
     fn record_type(&self) -> Result<headers::RecordType, errors::Error>;
 }
-

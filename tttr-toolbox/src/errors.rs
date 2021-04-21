@@ -1,5 +1,5 @@
-use thiserror::Error as ThisError;
 use std::io;
+use thiserror::Error as ThisError;
 
 #[derive(ThisError, Debug)]
 pub enum Error {
@@ -14,5 +14,3 @@ pub enum Error {
     #[error("{0}")]
     InvalidHeader(String),
 }
-
-// todo give more context to WrongEnumVariant

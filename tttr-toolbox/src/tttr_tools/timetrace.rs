@@ -1,7 +1,7 @@
-use crate::{TTTRStream, TTTRFile, Click};
-use crate::headers::{RecordType, File};
 use crate::errors::Error;
+use crate::headers::{File, RecordType};
 use crate::parsers::ptu;
+use crate::{Click, TTTRFile, TTTRStream};
 use std::fmt::Debug;
 
 struct TimeTrace<P: TTTRStream + Iterator> {
@@ -32,8 +32,11 @@ pub struct TimeTraceParams {
 }
 
 impl<P: TTTRStream + Iterator> TimeTrace<P> {
-    fn compute(self) -> TimeTraceResult where <P as Iterator>::Item: Debug + Click {
-        let blips_per_bin = (self.params.resolution  / self.click_stream.time_resolution()) as u64;
+    fn compute(self) -> TimeTraceResult
+    where
+        <P as Iterator>::Item: Debug + Click,
+    {
+        let blips_per_bin = (self.params.resolution / self.click_stream.time_resolution()) as u64;
         let mut trace: Vec<u64> = vec![];
         let mut recnum_trace: Vec<u64> = vec![];
 
@@ -42,19 +45,22 @@ impl<P: TTTRStream + Iterator> TimeTrace<P> {
 
         for (idx, rec) in self.click_stream.into_iter().enumerate() {
             if let Some(ch) = self.params.channel {
-                counter += if *rec.channel() == ch {1} else {0}
+                counter += if *rec.channel() == ch { 1 } else { 0 }
             } else {
-                counter += if *rec.channel() >= 0 {1} else {0};
+                counter += if *rec.channel() >= 0 { 1 } else { 0 };
             };
 
             if *rec.tof() > end_of_bin {
                 trace.push(counter);
-                recnum_trace.push(idx + start_record as u64);
+                recnum_trace.push(idx as u64);
                 counter = 0;
                 end_of_bin += blips_per_bin;
             };
-        };
-        TimeTraceResult{ intensity: trace, recnum_trace: recnum_trace }
+        }
+        TimeTraceResult {
+            intensity: trace,
+            recnum_trace: recnum_trace,
+        }
     }
 }
 
@@ -77,26 +83,32 @@ pub fn timetrace(f: &File, params: &TimeTraceParams) -> Result<TimeTraceResult, 
     let start_record = None;
     let stop_record = None;
     match f {
-        File::PTU(x) => {
-            match x.record_type().unwrap() {
-                RecordType::PHT2 => {
-                    let stream = ptu::streamers::PHT2Stream::new(x, start_record, stop_record)?;
-                    let tt = TimeTrace {click_stream: stream, params: *params};
-                    Ok(tt.compute())
-                },
-                RecordType::HHT2_HH1 => {
-                    let stream = ptu::streamers::HHT2_HH1Stream::new(x, start_record, stop_record)?;
-                    let tt = TimeTrace {click_stream: stream, params: *params};
-                    Ok(tt.compute())
-                }
-                RecordType::HHT2_HH2 => {
-                    let stream = ptu::streamers::HHT2_HH2Stream::new(x, start_record, stop_record)?;
-                    let tt = TimeTrace {click_stream: stream, params: *params};
-                    Ok(tt.compute())
-                }
-                RecordType::NotImplemented => panic!{"Record type not implemented"},
+        File::PTU(x) => match x.record_type().unwrap() {
+            RecordType::PHT2 => {
+                let stream = ptu::streamers::PHT2Stream::new(x, start_record, stop_record)?;
+                let tt = TimeTrace {
+                    click_stream: stream,
+                    params: *params,
+                };
+                Ok(tt.compute())
             }
+            RecordType::HHT2_HH1 => {
+                let stream = ptu::streamers::HHT2_HH1Stream::new(x, start_record, stop_record)?;
+                let tt = TimeTrace {
+                    click_stream: stream,
+                    params: *params,
+                };
+                Ok(tt.compute())
+            }
+            RecordType::HHT2_HH2 => {
+                let stream = ptu::streamers::HHT2_HH2Stream::new(x, start_record, stop_record)?;
+                let tt = TimeTrace {
+                    click_stream: stream,
+                    params: *params,
+                };
+                Ok(tt.compute())
+            }
+            RecordType::NotImplemented => panic! {"Record type not implemented"},
         },
     }
 }
-

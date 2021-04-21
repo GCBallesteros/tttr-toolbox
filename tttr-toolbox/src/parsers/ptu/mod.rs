@@ -9,8 +9,8 @@ use num_traits::FromPrimitive;
 use pyo3;
 
 use crate::errors::Error;
-use crate::TTTRFile;
 use crate::headers;
+use crate::TTTRFile;
 
 pub type Header = HashMap<String, PTUTag>;
 
@@ -80,8 +80,8 @@ const TAG_TTTR_REC_TYPE: &str = "TTResultFormat_TTTRRecType";
 const TAG_NUM_RECORDS: &str = "TTResult_NumberOfRecords"; // Number of TTTR Records in the File;
 const TAG_GLOB_RES: &str = "MeasDesc_GlobalResolution"; // Global Resolution of TimeTag(T2) /NSync (T3)
 const FILE_TAG_END: &str = "Header_End"; // Always appended as last tag (BLOCKEND)
-// const TAG_ACQUISITION_TIMETTTR: &str = "MeasDesc_AcquisitionTime";
-// const TAG_RES: &str = "MeasDesc_Resolution"; // Resolution for the Dtime (T3 Only)
+                                         // const TAG_ACQUISITION_TIMETTTR: &str = "MeasDesc_AcquisitionTime";
+                                         // const TAG_RES: &str = "MeasDesc_Resolution"; // Resolution for the Dtime (T3 Only)
 
 /// Metadata for a PTU file from PicoQuant
 pub struct PTUFile {
@@ -120,19 +120,22 @@ impl TTTRFile for PTUFile {
         let header = &self.header;
         let record_type = FromPrimitive::from_i64(read_ptu_tag!(header[TAG_TTTR_REC_TYPE] as Int8));
 
-        Ok(match record_type
-           .ok_or_else(|| Error::InvalidHeader(String::from("Invalid RecordType type")))? {
-            RecType::PicoHarpT3 => headers::RecordType::NotImplemented,
-            RecType::PicoHarpT2 => headers::RecordType::PHT2,
-            RecType::HydraHarpT3 => headers::RecordType::NotImplemented,
-            RecType::HydraHarpT2 => headers::RecordType::HHT2_HH2,
-            RecType::HydraHarp2T3 => headers::RecordType::NotImplemented,
-            RecType::HydraHarp2T2 => headers::RecordType::HHT2_HH1,
-            RecType::TimeHarp260NT3 => headers::RecordType::NotImplemented,
-            RecType::TimeHarp260NT2 => headers::RecordType::HHT2_HH2,
-            RecType::TimeHarp260PT3 => headers::RecordType::NotImplemented,
-            RecType::TimeHarp260PT2 => headers::RecordType::HHT2_HH2,
-        })
+        Ok(
+            match record_type
+                .ok_or_else(|| Error::InvalidHeader(String::from("Invalid RecordType type")))?
+            {
+                RecType::PicoHarpT3 => headers::RecordType::NotImplemented,
+                RecType::PicoHarpT2 => headers::RecordType::PHT2,
+                RecType::HydraHarpT3 => headers::RecordType::NotImplemented,
+                RecType::HydraHarpT2 => headers::RecordType::HHT2_HH2,
+                RecType::HydraHarp2T3 => headers::RecordType::NotImplemented,
+                RecType::HydraHarp2T2 => headers::RecordType::HHT2_HH1,
+                RecType::TimeHarp260NT3 => headers::RecordType::NotImplemented,
+                RecType::TimeHarp260NT2 => headers::RecordType::HHT2_HH2,
+                RecType::TimeHarp260PT3 => headers::RecordType::NotImplemented,
+                RecType::TimeHarp260PT2 => headers::RecordType::HHT2_HH2,
+            },
+        )
     }
 }
 

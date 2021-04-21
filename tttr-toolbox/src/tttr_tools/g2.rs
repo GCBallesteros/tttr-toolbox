@@ -1,9 +1,9 @@
-use crate::{TTTRStream, TTTRFile, Click};
-use crate::headers::{RecordType, File};
 use crate::errors::Error;
+use crate::headers::{File, RecordType};
 use crate::parsers::ptu;
-use std::fmt::Debug;
 use crate::tttr_tools::circular_buffer::CircularBuffer;
+use crate::{Click, TTTRFile, TTTRStream};
+use std::fmt::Debug;
 
 const MAX_BUFFER_SIZE: usize = 4096;
 
@@ -36,14 +36,18 @@ pub struct G2Params {
 }
 
 impl<P: TTTRStream + Iterator> G2<P> {
-    fn compute(self) -> G2Result where <P as Iterator>::Item: Debug + Click {
+    fn compute(self) -> G2Result
+    where
+        <P as Iterator>::Item: Debug + Click,
+    {
         let real_resolution = self.params.resolution.clone();
         let n_bins = (self.params.correlation_window / self.params.resolution) as u64;
-        let correlation_window = self.params.correlation_window / self.click_stream.time_resolution();
+        let correlation_window =
+            self.params.correlation_window / self.click_stream.time_resolution();
 
         let resolution = (correlation_window / (n_bins as f64)) as u64;
         let correlation_window = n_bins * resolution;
-        let n_bins = n_bins*2;
+        let n_bins = n_bins * 2;
 
         let central_bin = n_bins / 2;
         let mut histogram = vec![0; n_bins as usize];
@@ -55,7 +59,7 @@ impl<P: TTTRStream + Iterator> G2<P> {
         // algorithm invariants.
         //   1. `rec.tof` is always the most recent click on the detector.
         //   2. The `if` guard on `delta`.
-        for rec  in self.click_stream.into_iter() {
+        for rec in self.click_stream.into_iter() {
             let (tof, channel) = (*rec.tof(), *rec.channel());
 
             if channel == self.params.channel_1 {
@@ -66,7 +70,9 @@ impl<P: TTTRStream + Iterator> G2<P> {
                     if delta < correlation_window {
                         let hist_idx = central_bin - delta / resolution - 1;
                         histogram[hist_idx as usize] += 1;
-                    } else {break;}
+                    } else {
+                        break;
+                    }
                 }
             } else if channel == self.params.channel_2 {
                 buff_2.push(tof);
@@ -75,15 +81,20 @@ impl<P: TTTRStream + Iterator> G2<P> {
                     let delta = tof - click;
                     if delta < correlation_window {
                         let hist_idx = central_bin + delta / resolution;
-                        histogram[hist_idx as usize] +=  1;
-                    } else {break;}
-                } 
+                        histogram[hist_idx as usize] += 1;
+                    } else {
+                        break;
+                    }
+                }
             }
-        };
+        }
         let t = (0..n_bins)
             .map(|i| ((i as f64) - (central_bin as f64)) * real_resolution)
             .collect::<Vec<f64>>();
-        G2Result { t: t, hist: histogram}
+        G2Result {
+            t: t,
+            hist: histogram,
+        }
     }
 }
 
@@ -99,7 +110,7 @@ impl<P: TTTRStream + Iterator> G2<P> {
 ///    - resolution: Resolution of the g2 histogram in seconds,
 ///
 /// ## Algorithm description
-/// 
+///
 /// The streaming g2 algorithm measures the time difference between a
 /// photon arriving at a channel and all the photons that came before it and arrived
 /// at the other channel. A histogram of time differences is then built and is the output
@@ -133,26 +144,32 @@ pub fn g2(f: &File, params: &G2Params) -> Result<G2Result, Error> {
     let start_record = params.start_record;
     let stop_record = params.stop_record;
     match f {
-        File::PTU(x) => {
-            match x.record_type().unwrap() {
-                RecordType::PHT2 => {
-                    let stream = ptu::streamers::PHT2Stream::new(x, start_record, stop_record)?;
-                    let tt = G2 {click_stream: stream, params: *params};
-                    Ok(tt.compute())
-                },
-                RecordType::HHT2_HH1 => {
-                    let stream = ptu::streamers::HHT2_HH1Stream::new(x, start_record, stop_record)?;
-                    let tt = G2 {click_stream: stream, params: *params};
-                    Ok(tt.compute())
-                }
-                RecordType::HHT2_HH2 => {
-                    let stream = ptu::streamers::HHT2_HH2Stream::new(x, start_record, stop_record)?;
-                    let tt = G2 {click_stream: stream, params: *params};
-                    Ok(tt.compute())
-                }
-                RecordType::NotImplemented => panic!{"Record type not implemented"},
+        File::PTU(x) => match x.record_type().unwrap() {
+            RecordType::PHT2 => {
+                let stream = ptu::streamers::PHT2Stream::new(x, start_record, stop_record)?;
+                let tt = G2 {
+                    click_stream: stream,
+                    params: *params,
+                };
+                Ok(tt.compute())
             }
+            RecordType::HHT2_HH1 => {
+                let stream = ptu::streamers::HHT2_HH1Stream::new(x, start_record, stop_record)?;
+                let tt = G2 {
+                    click_stream: stream,
+                    params: *params,
+                };
+                Ok(tt.compute())
+            }
+            RecordType::HHT2_HH2 => {
+                let stream = ptu::streamers::HHT2_HH2Stream::new(x, start_record, stop_record)?;
+                let tt = G2 {
+                    click_stream: stream,
+                    params: *params,
+                };
+                Ok(tt.compute())
+            }
+            RecordType::NotImplemented => panic! {"Record type not implemented"},
         },
     }
 }
-

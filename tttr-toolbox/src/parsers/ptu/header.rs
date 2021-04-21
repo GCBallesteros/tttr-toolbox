@@ -1,13 +1,13 @@
-use std::fmt;
-use std::io::{SeekFrom, BufReader, BufRead, Seek, Read};
-use std::path::PathBuf;
 use std::collections::HashMap;
+use std::fmt;
+use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
+use std::path::PathBuf;
 use std::str;
 
 use num_traits::FromPrimitive;
 
 use crate::errors::Error;
-use crate::parsers::ptu::{PTUTag, PTUTagType, FILE_TAG_END, Header};
+use crate::parsers::ptu::{Header, PTUTag, PTUTagType, FILE_TAG_END};
 
 impl fmt::Display for PTUTag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -27,7 +27,6 @@ impl fmt::Display for PTUTag {
     }
 }
 
-
 fn read_string(slice: &[u8], size: usize) -> Option<String> {
     assert!(2 * size <= slice.len());
     let iter = (0..size).map(|i| u16::from_be_bytes([slice[2 * i], slice[2 * i + 1]]));
@@ -37,7 +36,7 @@ fn read_string(slice: &[u8], size: usize) -> Option<String> {
         .ok()
 }
 
-pub(in super) fn read_ptu_header(filename: &PathBuf) -> Result<Header, Error> {
+pub(super) fn read_ptu_header(filename: &PathBuf) -> Result<Header, Error> {
     let offset = 16;
     let mut buffered = BufReader::new(std::fs::File::open(filename)?);
     let mut header = HashMap::new();
@@ -129,11 +128,9 @@ fn process_tag<R: BufRead>(
             let string_length = u64::from_le_bytes(value_buffer);
             let mut string_buffer: Vec<u8> = vec![0; string_length as usize];
             buffered.read_exact(&mut string_buffer)?;
-            let value = str::from_utf8(&string_buffer)
-                .ok()
-                .ok_or_else(|| Error::InvalidHeader(String::from(
-                    "Invalid utf8 string in header.",
-                )))?;
+            let value = str::from_utf8(&string_buffer).ok().ok_or_else(|| {
+                Error::InvalidHeader(String::from("Invalid utf8 string in header."))
+            })?;
             PTUTag::AnsiString8(value.to_string().trim_matches(char::from(0)).to_string())
         }
     };
@@ -149,9 +146,7 @@ fn read_tag(
 
     let tag_name = str::from_utf8(&tagname_buffer)
         .ok()
-        .ok_or_else(|| Error::InvalidHeader(String::from(
-            "Invalid utf8 string in header.",
-        )))?
+        .ok_or_else(|| Error::InvalidHeader(String::from("Invalid utf8 string in header.")))?
         .trim_matches(char::from(0));
     let tag_name = if tag_index > -1 {
         format!("{}{}", tag_name, tag_index)

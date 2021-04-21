@@ -17,7 +17,7 @@ impl CircularBuffer {
             self.buffer.push(val);
         } else {
             let head = self.head;
-            unsafe { 
+            unsafe {
                 let elem = self.buffer.get_unchecked_mut(head as usize);
                 *elem = val;
             }
@@ -54,36 +54,11 @@ impl<'a> Iterator for IterCircularBuffer<'a> {
             None
         } else {
             self.pos -= 1;
-            let wrap_around_idx = ((self.pos+1) as usize) % self.inner.len();
+            let wrap_around_idx = ((self.pos + 1) as usize) % self.inner.len();
             unsafe {
                 let elem = &self.inner.buffer.get_unchecked(wrap_around_idx);
                 Some(elem)
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn few_pushes() {
-        let mut test_buff = CircularBuffer::new(16);
-        test_buff.push(1);
-        test_buff.push(3);
-        assert_eq!(test_buff.buffer[0], 1);
-        assert_eq!(test_buff.buffer[1], 3);
-    }
-
-    #[test]
-    fn push_around() {
-        let len: i64 = 16;
-        let mut test_buff = CircularBuffer::new(len as usize);
-        for i in 0..(2*len as usize) {
-            test_buff.push(i as u64);
-        }
-
-        assert_eq!(test_buff.buffer[0], 16);
     }
 }
