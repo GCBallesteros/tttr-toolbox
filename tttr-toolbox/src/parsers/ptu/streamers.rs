@@ -90,7 +90,7 @@ fn parse_record(&mut self, record: Self::RecordSize) -> TTTRRecord {
     let tof;
     let channel;
 
-    self.overflow_correction += T2WRAPAROUND * ((ch==0x3F) as u64);
+    self.overflow_correction += T2WRAPAROUND * tm * ((ch==0x3F) as u64);
     channel = (1 - sp) * (ch + 1) - sp * ch; // ch +1 - sp ch -sp - sp ch
     tof = self.overflow_correction + tm;
 
