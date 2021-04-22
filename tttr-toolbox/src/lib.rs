@@ -11,10 +11,10 @@
 //! - Ease of extensibility
 //!
 //! ## Algorithms available
-//! - second order autocorrelation (g2)
-//! - intensity time trace
-//! - record number time trace
-//! - zero delay finder
+//! - [second order autocorrelation](tttr_tools/g2/fn.g2.html)
+//! - [intensity time trace](tttr_tools/timetrace/fn.timetrace.html)
+//! - [record number time trace](tttr_tools/timetrace/fn.timetrace.html)
+//! - [zero delay finder](tttr_tools/zero_finder/fn.zerofinder.html)
 //!
 //! ## Supported file and record formats
 //! - PicoQuant PTU
