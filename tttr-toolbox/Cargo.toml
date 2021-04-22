@@ -11,9 +11,7 @@ num-traits = "0.2"
 num-derive = "0.3"
 thiserror = "1.0"
 byteorder = "1"
-icecream = "0.1.0"
 tttr-toolbox-proc-macros = { path = "../tttr-toolbox-proc-macros" }
-dict_derive = "0.3.1"
 
 [dependencies.pyo3]
 version = "0.13.2"

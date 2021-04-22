@@ -80,8 +80,8 @@ const TAG_TTTR_REC_TYPE: &str = "TTResultFormat_TTTRRecType";
 const TAG_NUM_RECORDS: &str = "TTResult_NumberOfRecords"; // Number of TTTR Records in the File;
 const TAG_GLOB_RES: &str = "MeasDesc_GlobalResolution"; // Global Resolution of TimeTag(T2) /NSync (T3)
 const FILE_TAG_END: &str = "Header_End"; // Always appended as last tag (BLOCKEND)
-                                         // const TAG_ACQUISITION_TIMETTTR: &str = "MeasDesc_AcquisitionTime";
-                                         // const TAG_RES: &str = "MeasDesc_Resolution"; // Resolution for the Dtime (T3 Only)
+const _TAG_ACQUISITION_TIMETTTR: &str = "MeasDesc_AcquisitionTime";
+const _TAG_RES: &str = "MeasDesc_Resolution"; // Resolution for the Dtime (T3 Only)
 
 /// Metadata for a PTU file from PicoQuant
 pub struct PTUFile {
@@ -116,6 +116,8 @@ impl TTTRFile for PTUFile {
         Ok(read_ptu_tag!(header[TAG_GLOB_RES] as Float8))
     }
 
+    /// Returns the `record_type` used in the file. This is matched on each algorithm
+    /// with a specific file parser.
     fn record_type(&self) -> Result<headers::RecordType, Error> {
         let header = &self.header;
         let record_type = FromPrimitive::from_i64(read_ptu_tag!(header[TAG_TTTR_REC_TYPE] as Int8));

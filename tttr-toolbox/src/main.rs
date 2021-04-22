@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 use std::time::Instant;
 
-extern crate dict_derive;
 extern crate tttr_toolbox_proc_macros;
 //use tttr_toolbox::tttr_tools::timetrace::{timetrace, TimeTraceParams};
 use tttr_toolbox::tttr_tools::g2::{g2, G2Params};
@@ -9,9 +8,7 @@ use tttr_toolbox::parsers::ptu::PTUFile;
 use tttr_toolbox::headers::File;
 
 // ToDo
-// 1. Start/stop record
 // 2. Check magic number for PTU
-// 3. Document timetrace
 
 
 pub fn main() {
