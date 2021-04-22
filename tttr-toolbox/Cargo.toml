@@ -1,17 +1,20 @@
 [package]
 name = "tttr-toolbox"
 version = "0.1.0"
-authors = ["Guillem Ballesteros <guillem.ballesteros.garcia@gmail.com>"]
+authors = ["dev+crates@maxwellrules.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Fast streaming algorithms for your TTTR data."
+repository = "https://github.com/GCBallesteros/tttr-toolbox"
+homepage = "https://github.com/GCBallesteros/tttr-toolbox"
+keywords = ["scientific-computing", "science"]
+readme = "README.md"
 
 [dependencies]
 num-traits = "0.2"
 num-derive = "0.3"
 thiserror = "1.0"
 byteorder = "1"
-tttr-toolbox-proc-macros = { path = "../tttr-toolbox-proc-macros" }
+tttr-toolbox-proc-macros = { path = "../tttr-toolbox-proc-macros", version="*" }
 
 [dependencies.pyo3]
 version = "0.13.2"
