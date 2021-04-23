@@ -6,6 +6,7 @@ edition = "2018"
 description = "Proc macros for ttt-toolbox"
 repository = "https://github.com/GCBallesteros/tttr-toolbox"
 homepage = "https://github.com/GCBallesteros/tttr-toolbox"
+license = "MIT"
 keywords = ["scientific-computing", "science"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
