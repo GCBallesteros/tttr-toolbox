@@ -1,12 +1,13 @@
 [package]
 name = "tttr-toolbox"
 version = "0.1.0"
-authors = ["dev+crates@maxwellrules.com>"]
+authors = ["Guillem Ballesteros <dev+crates@maxwellrules.com>"]
 edition = "2018"
 description = "Fast streaming algorithms for your TTTR data."
 repository = "https://github.com/GCBallesteros/tttr-toolbox"
 homepage = "https://github.com/GCBallesteros/tttr-toolbox"
 keywords = ["scientific-computing", "science"]
+license = "MIT"
 readme = "README.md"
 
 [dependencies]
