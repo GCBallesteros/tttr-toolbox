@@ -1,8 +1,12 @@
 [package]
 name = "tttr-toolbox-proc-macros"
 version = "0.1.0"
-authors = ["Guillem Ballesteros <guillem.ballesteros.garcia@gmail.com>"]
+authors = ["Guillem Ballesteros <dev+crate@maxwellrules.com>"]
 edition = "2018"
+description = "Proc macros for ttt-toolbox"
+repository = "https://github.com/GCBallesteros/tttr-toolbox"
+homepage = "https://github.com/GCBallesteros/tttr-toolbox"
+keywords = ["scientific-computing", "science"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
