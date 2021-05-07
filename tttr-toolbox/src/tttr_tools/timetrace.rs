@@ -108,6 +108,14 @@ pub fn timetrace(f: &File, params: &TimeTraceParams) -> Result<TimeTraceResult, 
                 };
                 Ok(tt.compute())
             }
+            RecordType::HHT3_HH2 => {
+                let stream = ptu::streamers::HHT3_HH2Stream::new(x, start_record, stop_record)?;
+                let tt = TimeTrace {
+                    click_stream: stream,
+                    params: *params,
+                };
+                Ok(tt.compute())
+            }
             RecordType::NotImplemented => panic! {"Record type not implemented"},
         },
     }

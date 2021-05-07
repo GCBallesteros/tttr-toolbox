@@ -124,9 +124,9 @@ pub fn make_ptu_stream(args: TokenStream, item: TokenStream) -> TokenStream {
                 if self.photons_in_buffer == 0 {
                     let read_res = self.source.read_u32_into::<NativeEndian>(&mut self.click_buffer[..]);
                     if let Err(_x) = read_res {
-                        if self.click_count < self.num_records {
-                            println!("Missed {}", self.num_records - self.click_count);
-                        }
+                        //if self.click_count < self.num_records {
+                            //println!("Missed {}", self.num_records - self.click_count);
+                        //}
                         return None
                     };
                     if self.click_count >= self.num_records {return None};

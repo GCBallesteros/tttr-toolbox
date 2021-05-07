@@ -141,6 +141,14 @@ pub fn zerofinder(f: &File, params: &ZeroFinderParams) -> Result<ZeroFinderResul
                 };
                 Ok(tt.compute())
             }
+            RecordType::HHT3_HH2 => {
+                let stream = ptu::streamers::HHT3_HH2Stream::new(x, start_record, stop_record)?;
+                let tt = ZeroFinder {
+                    click_stream: stream,
+                    params: *params,
+                };
+                Ok(tt.compute())
+            }
             RecordType::NotImplemented => panic! {"Record type not implemented"},
         },
     }

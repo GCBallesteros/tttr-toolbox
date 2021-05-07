@@ -43,7 +43,7 @@ impl<P: TTTRStream + Iterator> G2<P> {
         let real_resolution = self.params.resolution.clone();
         let n_bins = (self.params.correlation_window / self.params.resolution) as u64;
         let correlation_window =
-            self.params.correlation_window / self.click_stream.time_resolution();
+            self.params.correlation_window / (self.click_stream.time_resolution());
 
         let resolution = (correlation_window / (n_bins as f64)) as u64;
         let correlation_window = n_bins * resolution;
@@ -163,6 +163,14 @@ pub fn g2(f: &File, params: &G2Params) -> Result<G2Result, Error> {
             }
             RecordType::HHT2_HH2 => {
                 let stream = ptu::streamers::HHT2_HH2Stream::new(x, start_record, stop_record)?;
+                let tt = G2 {
+                    click_stream: stream,
+                    params: *params,
+                };
+                Ok(tt.compute())
+            }
+            RecordType::HHT3_HH2 => {
+                let stream = ptu::streamers::HHT3_HH2Stream::new(x, start_record, stop_record)?;
                 let tt = G2 {
                     click_stream: stream,
                     params: *params,

@@ -12,25 +12,25 @@ use tttr_toolbox::headers::File;
 
 
 pub fn main() {
-    let filename = PathBuf::from("/Users/garfield/Downloads/20191205_Xminus_0p1Ve-6_CW_HBT.ptu");
+    //let filename = PathBuf::from("/Users/garfield/Downloads/20191205_Xminus_0p1Ve-6_CW_HBT.ptu");
+    let filename = PathBuf::from("/Users/garfield/Downloads/GUI_T3_10s.ptu");
     let ptu_file = File::PTU(PTUFile::new(filename).unwrap());
     let File::PTU(f) = &ptu_file;
     println!("{}", f);
-    //println!("{}", answer());
     let start = Instant::now();
-    //let params = TimeTraceParams {resolution: 10, channel: Some(0)};
-    //let intensity_trace = timetrace(&ptu_file, &params);
+    //let params = TimeTraceParams {resolution: 0.1, channel: Some(1)};
     let params = G2Params {
-        channel_1: 0,
+        channel_1: 2,
         channel_2: 1,
-        correlation_window: 50_000e-12,
-        resolution: 600e-12,
+        correlation_window: 30e-9,
+        resolution: 30e-12,
         start_record: None,
         stop_record: None,
     };
-    //g2_resolution = 600 * 1e-12  # picoseconds * 1e-12 to change to seconds
-    //g2_window = 50000 * 1e-12
     let g2_histogram = g2(&ptu_file, &params).unwrap();
+    //let tt = timetrace(&ptu_file, &params).unwrap();
     eprintln!("elapsed {:?}", start.elapsed());
     println!("{:?}", g2_histogram.hist);
+    println!("{:?}", g2_histogram.t);
+    //println!("{:?}", tt.intensity);
 }
