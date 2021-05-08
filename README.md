@@ -22,7 +22,7 @@ crate.
   - PHT2
   - HHT2_HH1
   - HHT2_HH2
-  - HHT3_HH@
+  - HHT3_HH2
 
 If you want support for more record formats and file formats please ask for it.
 At the very least we will need the file format specification and a file with some
