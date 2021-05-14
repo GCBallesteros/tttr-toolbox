@@ -61,15 +61,17 @@ fn parse_record(&mut self, record: Self::RecordSize) -> TTTRRecord {
     const T2WRAPAROUND: u64 = 33552000;
 
     let sp = (((record & 0b10000000000000000000000000000000) >> 31) == 1) as i32;
-    let ch = ((record & 0b01111000000000000000000000000000) >> 27) as i32;
-    let tm = (record & 0b00000111111111111111111111111111) as u64;
+    let ch = ((record &  0b01111110000000000000000000000000) >> 25) as i32;
+    let tm = (record &   0b00000001111111111111111111111111) as u64;
 
     let tof;
     let channel;
 
-    self.overflow_correction += T2WRAPAROUND * ((ch == 0x3F) as u64);
-    channel = (1 - sp) * (ch + 1) - sp * ch; // ch +1 - sp ch -sp - sp ch
+    self.overflow_correction += T2WRAPAROUND * (sp as u64) * ((ch == 0x3F) as u64);
+    channel = (1 - sp) * (ch + 1) - sp * ch;
     tof = self.overflow_correction + tm;
+    
+    //println!("channel: {:?}, ch: {:?}, sp: {:?}", channel, ch, sp);
 
     TTTRRecord { channel, tof }
 }
@@ -79,11 +81,11 @@ fn parse_record(&mut self, record: Self::RecordSize) -> TTTRRecord {
 // - - - - - - - - - - - -//
 #[make_ptu_stream(HHT2_HH2)]
 fn parse_record(&mut self, record: Self::RecordSize) -> TTTRRecord {
-    const T2WRAPAROUND: u64 = 33552000;
+    const T2WRAPAROUND: u64 = 33554432;
 
     let sp = (((record & 0b10000000000000000000000000000000) >> 31) == 1) as i32;
-    let ch = ((record & 0b01111000000000000000000000000000) >> 27) as i32;
-    let tm = (record & 0b00000111111111111111111111111111) as u64;
+    let ch = ((record &  0b01111110000000000000000000000000) >> 25) as i32;
+    let tm = (record &   0b00000001111111111111111111111111) as u64;
 
     let tof;
     let channel;
@@ -185,20 +187,22 @@ impl TTTRStream for HHT3_HH2Stream {
                     self.nsync += T3WRAPAROUND * nsync;
                   }
                   tof = 0;
+                  channel = 0;
             } else if (ch >= 1) && (ch <= 15) {  // markers
                   tof=0; // wrong look at picoquant for correct value
-            } else {tof = 0;}
+                  channel = -1;
+            } else {tof = 0; channel=-1;}
             // At the current time we ignore markers. This is signalled by returnig a
             //negative channel number.
-            channel = -1;
         } else {
             let truensync = self.nsync + nsync;
             //the nsync time unit depends on sync period which can be obtained from the file header
             //the dtime unit depends on the resolution and can also be obtained from the file header
             tof = (truensync * self.sync_period + dtime * self.dtime_res) as u64;
 
-            channel = ch;
+            channel = ch + 1;
         }
+        //println!("channel: {:?}, ch: {:?}, sp: {:?}", channel, ch, sp);
         TTTRRecord { channel, tof}
     }
 
