@@ -15,6 +15,7 @@
 //! - [intensity time trace](tttr_tools/timetrace/fn.timetrace.html)
 //! - [record number time trace](tttr_tools/timetrace/fn.timetrace.html)
 //! - [zero delay finder](tttr_tools/zero_finder/fn.zerofinder.html)
+//! - [lifetimes](tttr_tools/lifetime/fn.lifetime.html)
 //!
 //! ## Supported file and record formats
 //! - PicoQuant PTU

@@ -16,6 +16,7 @@ crate.
 - intensity time trace
 - record number time trace
 - zero delay finder
+- lifetimes
 
 ## Supported file and record formats
 - PicoQuant PTU
