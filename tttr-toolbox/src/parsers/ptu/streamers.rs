@@ -114,7 +114,7 @@ pub struct HHT3_HH2Stream {
     photons_in_buffer: i32,
     click_count: usize,
     nsync: u64,
-    sync_period: u64,
+    pub sync_period: u64,
     dtime_res: u64,
 }
 
@@ -186,10 +186,10 @@ impl TTTRStream for HHT3_HH2Stream {
                   else {
                     self.nsync += T3WRAPAROUND * nsync;
                   }
-                  tof = 0;
+                  tof = self.nsync * self.sync_period;
                   channel = 0;
             } else if (ch >= 1) && (ch <= 15) {  // markers
-                  tof=0; // wrong look at picoquant for correct value
+                  tof=self.nsync * self.sync_period; // wrong look at picoquant for correct value
                   channel = -1;
             } else {tof = 0; channel=-1;}
             // At the current time we ignore markers. This is signalled by returnig a
