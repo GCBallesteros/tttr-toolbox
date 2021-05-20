@@ -100,13 +100,13 @@ pub fn lifetime(f: &File, params: &LifetimeParams) -> Result<LifetimeResult, Err
     match f {
         File::PTU(x) => match x.record_type().unwrap() {
             RecordType::PHT2 => {
-                panic!("The lifetime algorithm is only supported in T3 mode")
+                Err(Error::NotImplemented(String::from("The lifetime algorithm is only supported in T3 mode")))
             }
             RecordType::HHT2_HH1 => {
-                panic!("The lifetime algorithm is only supported in T3 mode")
+                Err(Error::NotImplemented(String::from("The lifetime algorithm is only supported in T3 mode")))
             }
             RecordType::HHT2_HH2 => {
-                panic!("The lifetime algorithm is only supported in T3 mode")
+                Err(Error::NotImplemented(String::from("The lifetime algorithm is only supported in T3 mode")))
             }
             RecordType::HHT3_HH2 => {
                 let stream = ptu::streamers::HHT3_HH2Stream::new(x, start_record, stop_record)?;

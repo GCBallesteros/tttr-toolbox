@@ -13,4 +13,6 @@ pub enum Error {
     WrongEnumVariant,
     #[error("{0}")]
     InvalidHeader(String),
+    #[error("{0}")]
+    NotImplemented(String),
 }

@@ -16,11 +16,17 @@ num-derive = "0.3"
 thiserror = "1.0"
 byteorder = "1"
 tttr-toolbox-proc-macros = { path = "../tttr-toolbox-proc-macros", version="0.1.0" }
+clap = "2.33.3"
 
 [dependencies.pyo3]
 version = "0.13.2"
 features = ["extension-module"]
 
+[lib]
+name = "tttr_toolbox"
+path = "src/lib.rs"
 
-
+[[bin]]
+name = "tttr"
+path = "src/main.rs"
 
