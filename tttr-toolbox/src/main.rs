@@ -1,4 +1,10 @@
+use anyhow::Result;
+
+use ndarray::arr1;
+use ndarray_npy::NpzWriter;
+
 use std::path::PathBuf;
+use std;
 
 extern crate tttr_toolbox_proc_macros;
 extern crate clap;
@@ -6,16 +12,18 @@ extern crate clap;
 use clap::{Arg, App, SubCommand};
 
 use tttr_toolbox::tttr_tools::timetrace::{timetrace, TimeTraceParams};
-use tttr_toolbox::tttr_tools::g2::{g2, G2Params};
 use tttr_toolbox::tttr_tools::lifetime::{lifetime, LifetimeParams};
+use tttr_toolbox::tttr_tools::g2::{g2, G2Params};
+use tttr_toolbox::tttr_tools::g3::{g3, G3Params};
 use tttr_toolbox::parsers::ptu::PTUFile;
 use tttr_toolbox::headers::File;
 
 // ToDo
 // 2. Check magic number for PTU
+// 3. Errors
+// 4. Documentation for g3
 
-
-pub fn main() {
+pub fn main() -> Result<()> {
     let matches = App::new("TTTR Toolbox")
         .version("0.3")
         .author("Guillem Ballesteros")
@@ -33,6 +41,13 @@ pub fn main() {
                 Arg::with_name("input")
                 .short("i")
                 .help("Input file path")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(
+                Arg::with_name("output")
+                .short("o")
+                .help("Output Numpy npz file path")
                 .takes_value(true)
                 .required(true)
             )
@@ -58,6 +73,13 @@ pub fn main() {
                 Arg::with_name("input")
                 .short("i")
                 .help("Input file path")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(
+                Arg::with_name("output")
+                .short("o")
+                .help("Output Numpy npz file path")
                 .takes_value(true)
                 .required(true)
             )
@@ -92,6 +114,13 @@ pub fn main() {
                 .required(true)
             )
             .arg(
+                Arg::with_name("output")
+                .short("o")
+                .help("Output Numpy npz file path")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(
                 Arg::with_name("channel1")
                 .short("1")
                 .help("First channel")
@@ -120,56 +149,154 @@ pub fn main() {
                 .required(true)
             )
         )
+        .subcommand(
+            SubCommand::with_name("g3")
+            .about("Compute third order coincidences between two channels")
+            .arg(
+                Arg::with_name("input")
+                .short("i")
+                .help("Input file path")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(
+                Arg::with_name("output")
+                .short("o")
+                .help("Output Numpy npz file path")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(
+                Arg::with_name("channel1")
+                .short("1")
+                .help("First channel")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(
+                Arg::with_name("channel2")
+                .short("2")
+                .help("Second channel")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(
+                Arg::with_name("channel3")
+                .short("3")
+                .help("Third channel")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(
+                Arg::with_name("correlation_window")
+                .short("w")
+                .help("Length of the correlation window in seconds")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(
+                Arg::with_name("resolution")
+                .short("r")
+                .help("Time resolution of the g3 histogram")
+                .takes_value(true)
+                .required(true)
+            )
+        )
         .get_matches();
 
 
     match matches.subcommand() {
         ("intensity", Some(intensity_matches)) => {
             let filename = PathBuf::from(intensity_matches.value_of("input").unwrap());
-            let ptu_file = File::PTU(PTUFile::new(filename).unwrap());
+            let ptu_file = File::PTU(PTUFile::new(filename)?);
             let params = TimeTraceParams {
-                resolution: intensity_matches.value_of("resolution").unwrap().parse::<f64>().unwrap(),
+                resolution: intensity_matches.value_of("resolution").unwrap().parse::<f64>()?,
                 channel: intensity_matches.value_of("channel").map(|x| {x.parse::<i32>().unwrap()}),
             };
-            let tt = timetrace(&ptu_file, &params).unwrap();
-            println!("{:?}", tt.intensity);
-            println!("{:?}", tt.recnum_trace);
+            let tt = timetrace(&ptu_file, &params)?;
+
+            let mut npz = NpzWriter::new(
+                std::fs::File::create(
+                    intensity_matches.value_of("output").unwrap()
+                )?
+            );
+            npz.add_array("intensity", &arr1(&tt.intensity))?;
+            npz.add_array("recnum_trace", &arr1(&tt.recnum_trace))?;
+            npz.finish()?;
         },
         ("g2", Some(g2_matches)) => {
             let filename = PathBuf::from(g2_matches.value_of("input").unwrap());
-            let ptu_file = File::PTU(PTUFile::new(filename).unwrap());
+            let ptu_file = File::PTU(PTUFile::new(filename)?);
             let params = G2Params {
-                channel_1: g2_matches.value_of("1").unwrap().parse::<i32>().unwrap(),
-                channel_2: g2_matches.value_of("2").unwrap().parse::<i32>().unwrap(),
-                correlation_window: g2_matches.value_of("correlation_window").unwrap().parse::<f64>().unwrap(), //10e-9,
-                resolution: g2_matches.value_of("resolution").unwrap().parse::<f64>().unwrap(),  //60e-12
+                channel_1: g2_matches.value_of("channel1").unwrap().parse::<i32>()?,
+                channel_2: g2_matches.value_of("channel2").unwrap().parse::<i32>()?,
+                correlation_window: g2_matches.value_of("correlation_window").unwrap().parse::<f64>()?,
+                resolution: g2_matches.value_of("resolution").unwrap().parse::<f64>()?,
                 start_record: None,
                 stop_record: None,
             };
-            let g2_histogram = g2(&ptu_file, &params).unwrap();
-            println!("{:?}", g2_histogram.hist);
-            println!("{:?}", g2_histogram.t);
+            let g2_histogram = g2(&ptu_file, &params)?;
+
+            let mut npz = NpzWriter::new(
+                std::fs::File::create(
+                    g2_matches.value_of("output").unwrap()
+                )?
+            );
+            npz.add_array("histogram", &arr1(&g2_histogram.hist))?;
+            npz.add_array("t", &arr1(&g2_histogram.t))?;
+            npz.finish()?;
+        },
+        ("g3", Some(g3_matches)) => {
+            let filename = PathBuf::from(g3_matches.value_of("input").unwrap());
+            let ptu_file = File::PTU(PTUFile::new(filename)?);
+            let params = G3Params {
+                chn_1: g3_matches.value_of("channel1").unwrap().parse::<i32>()?,
+                chn_2: g3_matches.value_of("channel2").unwrap().parse::<i32>()?,
+                chn_3: g3_matches.value_of("channel3").unwrap().parse::<i32>()?,
+                correlation_window: g3_matches.value_of("correlation_window").unwrap().parse::<f64>()?,
+                resolution: g3_matches.value_of("resolution").unwrap().parse::<f64>()?,
+                start_record: None,
+                stop_record: None,
+            };
+            let g3_histogram = g3(&ptu_file, &params).unwrap();
+
+            let mut npz = NpzWriter::new(
+                std::fs::File::create(
+                    g3_matches.value_of("output").unwrap()
+                )?
+            );
+            npz.add_array("histogram", &g3_histogram.hist)?;
+            npz.add_array("t", &arr1(&g3_histogram.t))?;
+            npz.finish()?;
         },
         ("lifetime", Some(lifetime_matches)) => {
             let filename = PathBuf::from(lifetime_matches.value_of("input").unwrap());
-            let ptu_file = File::PTU(PTUFile::new(filename).unwrap());
+            let ptu_file = File::PTU(PTUFile::new(filename)?);
             let params = LifetimeParams {
-                channel_sync: lifetime_matches.value_of("ch_sync").unwrap().parse::<i32>().unwrap(),
-                channel_source: lifetime_matches.value_of("ch_source").unwrap().parse::<i32>().unwrap(), resolution: lifetime_matches.value_of("resolution").unwrap().parse::<f64>().unwrap(),  //60e-12
+                channel_sync: lifetime_matches.value_of("ch_sync").unwrap().parse::<i32>()?,
+                channel_source: lifetime_matches.value_of("ch_source").unwrap().parse::<i32>()?,
+                resolution: lifetime_matches.value_of("resolution").unwrap().parse::<f64>()?,
                 start_record: None,
                 stop_record: None,
             };
-            let lifetime_histogram = lifetime(&ptu_file, &params).unwrap();
-            println!("{:?}", lifetime_histogram.hist);
-            println!("{:?}", lifetime_histogram.t);
+            let lifetime_histogram = lifetime(&ptu_file, &params)?;
 
+            let mut npz = NpzWriter::new(
+                std::fs::File::create(
+                    lifetime_matches.value_of("output").unwrap()
+                )?
+            );
+            npz.add_array("histogram", &arr1(&lifetime_histogram.hist))?;
+            npz.add_array("t", &arr1(&lifetime_histogram.t))?;
+            npz.finish()?;
         },
         (_, None) => println!("No subcommand was used"),
         _ => unreachable!(), // Assuming you've listed all direct children above, this is unreachable
-    }
+    };
     //let filename = PathBuf::from("/Users/garfield/Downloads/20191205_Xminus_0p1Ve-6_CW_HBT.ptu");
     //let filename = PathBuf::from("/Users/garfield/Downloads/GUI_T3_10s.ptu");
     //let filename = PathBuf::from("/Users/garfield/Downloads/GUI_T2.ptu");
     //let File::PTU(f) = &ptu_file;
     //println!("{}", f);
+    Ok(())
 }

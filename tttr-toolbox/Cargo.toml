@@ -17,6 +17,9 @@ thiserror = "1.0"
 byteorder = "1"
 tttr-toolbox-proc-macros = { path = "../tttr-toolbox-proc-macros", version="0.1.0" }
 clap = "2.33.3"
+ndarray = "0.15.2"
+ndarray-npy = {version = "0.8.0", features = ["npz"]}
+anyhow = "1.0.40"
 
 [dependencies.pyo3]
 version = "0.13.2"
