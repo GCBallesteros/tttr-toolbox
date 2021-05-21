@@ -1,4 +1,8 @@
 /target
 Cargo.lock
+.ipynb_checkpoints/
+*.npy
+*.npz
+*.ipynb
 /tttr-toolbox/target
 /tttr-toolbox-proc-macros/target
