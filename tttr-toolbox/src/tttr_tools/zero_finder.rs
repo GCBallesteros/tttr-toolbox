@@ -111,7 +111,7 @@ impl<P: TTTRStream + Iterator> ZeroFinder<P> {
 /// ## Fitting function
 /// You need to fit the output histogram to the following function:
 ///
-/// <img src="https://raw.githubusercontent.com/GCBallesteros/tttr-toolbox/master/images/double_decay.png" alt="Double Decay Eqn" > 
+/// <img src="https://raw.githubusercontent.com/GCBallesteros/tttr-toolbox/master/images/double_decay.png" alt="Double Decay Eqn" >
 pub fn zerofinder(f: &File, params: &ZeroFinderParams) -> Result<ZeroFinderResult, Error> {
     let start_record = None;
     let stop_record = None;

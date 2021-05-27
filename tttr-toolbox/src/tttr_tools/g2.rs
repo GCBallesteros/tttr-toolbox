@@ -125,6 +125,7 @@ impl<P: TTTRStream + Iterator> G2<P> {
 /// Past clicks on each channel are pushed into circular buffers that keep the last N photons
 /// that arrived at each of them. A circular buffer allows to always have time ordered arrival
 /// times if we look from the head position of the buffer backwards.
+/// <img src="https://raw.githubusercontent.com/GCBallesteros/tttr-toolbox/master/images/g2_orderings" alt="second order click orderings" >
 ///
 /// ## Finite buffer artifacts
 /// Not being capable to look back to all photons that came before can be a potential

@@ -30,9 +30,9 @@ pub struct G3Result {
 ///    - resolution: Resolution of the g3 histogram in seconds
 #[derive(Debug, Copy, Clone)]
 pub struct G3Params {
-    pub chn_1: i32,
-    pub chn_2: i32,
-    pub chn_3: i32,
+    pub channel_1: i32,
+    pub channel_2: i32,
+    pub channel_3: i32,
     pub correlation_window: f64,
     pub resolution: f64,
     pub start_record: Option<usize>,
@@ -54,11 +54,12 @@ impl<P: TTTRStream + Iterator> G3<P> {
         let n_bins = n_bins * 2;
 
         let central_bin = n_bins / 2;
-        let mut histogram =  Array2::<u64>::zeros((n_bins as usize, n_bins as usize));
+        let mut histogram = Array2::<u64>::zeros((n_bins as usize, n_bins as usize));
 
         let mut click_buffer = CCircularBuffer::new(MAX_BUFFER_SIZE);
 
-        let relevant_channels: Vec<i32> = vec!(1i32, 2i32, 3i32);
+        let relevant_channels: Vec<i32> =
+            vec![self.params.channel_1, self.params.channel_2, self.params.channel_3];
 
         for click_1 in self.click_stream.into_iter() {
             let (&tof1, &chn1) = (click_1.tof(), click_1.channel());
@@ -69,60 +70,39 @@ impl<P: TTTRStream + Iterator> G3<P> {
             for click_2 in click_buffer.iter() {
                 let &(tof2, chn2) = click_2;
                 let delta12 = tof1 - tof2;
-                if delta12 > correlation_window {break;}
+                if delta12 > correlation_window {
+                    break;
+                }
 
                 for click_3 in click_buffer.iter() {
                     let &(tof3, chn3) = click_3;
                     // time ordering is broken here because we are going
                     // through the same click buffer
-                    if tof3 >= tof2 {continue;}
+                    if tof3 >= tof2 {
+                        continue;
+                    }
                     let delta23 = tof2 - tof3;
                     let delta13 = delta12 + delta23;
 
-                    if chn1 == self.params.chn_1 {
-                        if chn2 == self.params.chn_2 {
-                            if chn3 == self.params.chn_3 {
-                                // (123) tau_1 > 0, tau_2 > 0
-                                let tau1 = delta12;
+                    // The if nesting happens in inverse order to the photon arrival
+                    // times. The reason is that older photons (deeper in the nesting)
+                    // happened before.
+                    if chn1 == self.params.channel_1 {
+                        if chn2 == self.params.channel_2 {
+                            if chn3 == self.params.channel_3 {
+                                // (321) tau_1 < 0, tau_2 < 0
+                                let tau1 = delta23;
                                 let tau2 = delta13;
                                 if tau1 < correlation_window && tau2 < correlation_window {
-                                    let idx1 = central_bin + tau1 / resolution;
-                                    let idx2 = central_bin + tau2 / resolution;
-                                    histogram[[idx1 as usize, idx2 as usize]] += 1;
-                                } else {
-                                    break;
-                                }
-                            }
-                        } else if chn2 == self.params.chn_3 {
-                            if chn3 == self.params.chn_2 {
-                                // (132) tau_1 > 0, tau_2 > 0
-                                let tau1 = delta13;
-                                let tau2 = delta12;
-                                if tau1 < correlation_window && tau2 < correlation_window {
-                                    let idx1 = central_bin + tau1 / resolution;
-                                    let idx2 = central_bin + tau2 / resolution;
-                                    histogram[[idx1 as usize, idx2 as usize]] += 1;
-                                } else {
-                                    break;
-                                }
-                            }
-                        }
-                    } else if chn1 == self.params.chn_2 {
-                        if chn2 == self.params.chn_1 {
-                            if chn3 == self.params.chn_3 {
-                                // (213) tau_1 < 0, tau_2 > 0
-                                let tau1 = delta12;
-                                let tau2 = delta23;
-                                if tau1 < correlation_window && tau2 < correlation_window {
                                     let idx1 = central_bin - tau1 / resolution - 1;
-                                    let idx2 = central_bin + tau2 / resolution;
+                                    let idx2 = central_bin - tau2 / resolution - 1;
                                     histogram[[idx1 as usize, idx2 as usize]] += 1;
                                 } else {
                                     break;
                                 }
                             }
-                        } else if chn2 == self.params.chn_3 {
-                            if chn3 == self.params.chn_1 {
+                        } else if chn2 == self.params.channel_3 {
+                            if chn3 == self.params.channel_2 {
                                 // (231) tau_1 < 0, tau_2 < 0
                                 let tau1 = delta13;
                                 let tau2 = delta23;
@@ -135,9 +115,9 @@ impl<P: TTTRStream + Iterator> G3<P> {
                                 }
                             }
                         }
-                    } else if chn1 == self.params.chn_3 {
-                        if chn2 == self.params.chn_1 {
-                            if chn3 == self.params.chn_2 {
+                    } else if chn1 == self.params.channel_2 {
+                        if chn2 == self.params.channel_1 {
+                            if chn3 == self.params.channel_3 {
                                 // (312) tau_1 > 0, tau_2 < 0
                                 let tau1 = delta23;
                                 let tau2 = delta12;
@@ -149,14 +129,42 @@ impl<P: TTTRStream + Iterator> G3<P> {
                                     break;
                                 }
                             }
-                        } else if chn2 == self.params.chn_2 {
-                            if chn3 == self.params.chn_1 {
-                                // (321) tau_1 < 0, tau_2 < 0
-                                let tau1 = delta23;
-                                let tau2 = delta13;
+                        } else if chn2 == self.params.channel_3 {
+                            if chn3 == self.params.channel_1 {
+                                // (132) tau_1 > 0, tau_2 > 0
+                                let tau1 = delta13;
+                                let tau2 = delta12;
+                                if tau1 < correlation_window && tau2 < correlation_window {
+                                    let idx1 = central_bin + tau1 / resolution;
+                                    let idx2 = central_bin + tau2 / resolution;
+                                    histogram[[idx1 as usize, idx2 as usize]] += 1;
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+                    } else if chn1 == self.params.channel_3 {
+                        if chn2 == self.params.channel_1 {
+                            if chn3 == self.params.channel_2 {
+                                // (213) tau_1 < 0, tau_2 > 0
+                                let tau1 = delta12;
+                                let tau2 = delta23;
                                 if tau1 < correlation_window && tau2 < correlation_window {
                                     let idx1 = central_bin - tau1 / resolution - 1;
-                                    let idx2 = central_bin - tau2 / resolution - 1;
+                                    let idx2 = central_bin + tau2 / resolution;
+                                    histogram[[idx1 as usize, idx2 as usize]] += 1;
+                                } else {
+                                    break;
+                                }
+                            }
+                        } else if chn2 == self.params.channel_2 {
+                            if chn3 == self.params.channel_1 {
+                                // (123) tau_1 > 0, tau_2 > 0
+                                let tau1 = delta12;
+                                let tau2 = delta13;
+                                if tau1 < correlation_window && tau2 < correlation_window {
+                                    let idx1 = central_bin + tau1 / resolution;
+                                    let idx2 = central_bin + tau2 / resolution;
                                     histogram[[idx1 as usize, idx2 as usize]] += 1;
                                 } else {
                                     break;
@@ -200,6 +208,7 @@ impl<P: TTTRStream + Iterator> G3<P> {
 /// The g3 algorithm is a generalization of the g2 algorithm to third order coincidences.
 /// This tra
 ///
+/// <img src="https://raw.githubusercontent.com/GCBallesteros/tttr-toolbox/master/images/g3_orderings" alt="third order click orderings" >
 ///
 /// Past clicks on each channel are pushed into circular buffers that keep the last N photons
 /// that arrived at each of them. A circular buffer allows to always have time ordered arrival
