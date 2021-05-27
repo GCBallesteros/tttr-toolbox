@@ -220,22 +220,22 @@ pub fn main() -> Result<()> {
                 .required(true)
             )
             .arg(
+                Arg::with_name("channelS")
+                .short("s")
+                .help("First channel")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(
                 Arg::with_name("channel1")
                 .short("1")
-                .help("First channel")
+                .help("Second channel")
                 .takes_value(true)
                 .required(true)
             )
             .arg(
                 Arg::with_name("channel2")
                 .short("2")
-                .help("Second channel")
-                .takes_value(true)
-                .required(true)
-            )
-            .arg(
-                Arg::with_name("channel3")
-                .short("3")
                 .help("Third channel")
                 .takes_value(true)
                 .required(true)
@@ -323,9 +323,9 @@ pub fn main() -> Result<()> {
             let filename = PathBuf::from(g3_matches.value_of("input").unwrap());
             let ptu_file = File::PTU(PTUFile::new(filename)?);
             let params = G3SyncParams {
+                channel_sync: g3_matches.value_of("channelS").unwrap().parse::<i32>()?,
                 channel_1: g3_matches.value_of("channel1").unwrap().parse::<i32>()?,
                 channel_2: g3_matches.value_of("channel2").unwrap().parse::<i32>()?,
-                channel_3: g3_matches.value_of("channel3").unwrap().parse::<i32>()?,
                 resolution: g3_matches.value_of("resolution").unwrap().parse::<f64>()?,
                 start_record: None,
                 stop_record: None,
