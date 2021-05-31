@@ -12,8 +12,8 @@
 //!
 //! ## Algorithms available
 //! - [second order autocorrelation](tttr_tools/g2/fn.g2.html)
-//! - [third order autocorrelation](tttr_tools/g3/fn.g3.html) (experimental)
-//! - [third order autocorrelation](tttr_tools/synced_g3/fn.g3_sync.html) (experimental)
+//! - [third order autocorrelation](tttr_tools/g3/fn.g3.html)
+//! - [third order autocorrelation](tttr_tools/synced_g3/fn.g3_sync.html) 
 //! - [intensity time trace](tttr_tools/timetrace/fn.timetrace.html)
 //! - [record number time trace](tttr_tools/timetrace/fn.timetrace.html)
 //! - [zero delay finder](tttr_tools/zero_finder/fn.zerofinder.html)

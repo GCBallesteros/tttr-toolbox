@@ -11,8 +11,8 @@ crate.
 
 ## Algorithms available
 - second order autocorrelation (g2)
-- third order autocorrelation (g3) (experimental)
-- synced third order autocorrelation (synced g3) (experimental)
+- third order autocorrelation (g3)
+- synced third order autocorrelation (synced g3)
 - intensity time trace
 - record number time trace
 - zero delay finder

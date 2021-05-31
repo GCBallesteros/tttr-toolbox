@@ -82,16 +82,45 @@ impl<P: TTTRStream + Iterator> G3<P> {
                         continue;
                     }
                     let delta23 = tof2 - tof3;
-                    let delta13 = delta12 + delta23;
+                    let delta13 = tof1 - tof3;
 
                     // The if nesting happens in inverse order to the photon arrival
                     // times. The reason is that older photons (deeper in the nesting)
                     // happened before.
+                    //
+                    // tau_1 is defined as the delay registered between clicks on the
+                    // channel we designate as ch1 and ch2. tau_2 is defined as the
+                    // delay registed between clicks on the channel we designate as ch1
+                    // and ch3.
+                    //
+                    // The nomenclature for the deltas (deltaXY) references the delay
+                    // between click X and click Y within these nested loops. It is not
+                    // the delay between channel X and Y. We only know what channels does
+                    // clicks correspond once we are inside the 3IFs. For example the first
+                    // nested IFs below correspond to an arrival of photons at channels
+                    // 3 -> 2 -> 1. Since the last photon to be registed is the one at ch3
+                    // it corresponds to tof3. Therefore delta13 corresponds to delay
+                    // between the most recent click at `tof1` (ch1 here) and the click on
+                    // ch3. That is tau2. Graphically, if we say channel_1 = 1, channel_2 =2
+                    // and channel_3 = 3.
+                    //
+                    //     tau2
+                    //  ┌─────────┐
+                    //  ▼         ▼
+                    //  3 -> 2 -> 1
+                    //  ▲    ▲    ▲
+                    //  │    │    │
+                    // tof3 tof2 tof1
+                    //   ▲    ▲
+                    //   └────┘
+                    //    tau1
+                    //
+                    // Another example is below
                     if chn1 == self.params.channel_1 {
                         if chn2 == self.params.channel_2 {
                             if chn3 == self.params.channel_3 {
                                 // (321) tau_1 < 0, tau_2 < 0
-                                let tau1 = delta23;
+                                let tau1 = delta12;
                                 let tau2 = delta13;
                                 if tau1 < correlation_window && tau2 < correlation_window {
                                     let idx1 = central_bin - tau1 / resolution - 1;
@@ -101,11 +130,12 @@ impl<P: TTTRStream + Iterator> G3<P> {
                                     break;
                                 }
                             }
-                        } else if chn2 == self.params.channel_3 {
+                        } 
+                        else if chn2 == self.params.channel_3 {
                             if chn3 == self.params.channel_2 {
                                 // (231) tau_1 < 0, tau_2 < 0
                                 let tau1 = delta13;
-                                let tau2 = delta23;
+                                let tau2 = delta12;
                                 if tau1 < correlation_window && tau2 < correlation_window {
                                     let idx1 = central_bin - tau1 / resolution - 1;
                                     let idx2 = central_bin - tau2 / resolution - 1;
@@ -119,8 +149,18 @@ impl<P: TTTRStream + Iterator> G3<P> {
                         if chn2 == self.params.channel_1 {
                             if chn3 == self.params.channel_3 {
                                 // (312) tau_1 > 0, tau_2 < 0
-                                let tau1 = delta23;
-                                let tau2 = delta12;
+                                //        tau1
+                                //       ┌────┐
+                                //       ▼    ▼
+                                //  3 -> 1 -> 2
+                                //  ▲    ▲    ▲
+                                //  │    │    │
+                                // tof3 tof2 tof1
+                                //   ▲    ▲
+                                //   └────┘
+                                //    tau2
+                                let tau1 = delta12;
+                                let tau2 = delta23;
                                 if tau1 < correlation_window && tau2 < correlation_window {
                                     let idx1 = central_bin + tau1 / resolution;
                                     let idx2 = central_bin - tau2 / resolution - 1;
@@ -133,7 +173,7 @@ impl<P: TTTRStream + Iterator> G3<P> {
                             if chn3 == self.params.channel_1 {
                                 // (132) tau_1 > 0, tau_2 > 0
                                 let tau1 = delta13;
-                                let tau2 = delta12;
+                                let tau2 = delta23;
                                 if tau1 < correlation_window && tau2 < correlation_window {
                                     let idx1 = central_bin + tau1 / resolution;
                                     let idx2 = central_bin + tau2 / resolution;
@@ -143,12 +183,13 @@ impl<P: TTTRStream + Iterator> G3<P> {
                                 }
                             }
                         }
-                    } else if chn1 == self.params.channel_3 {
+                    }
+                    else if chn1 == self.params.channel_3 {
                         if chn2 == self.params.channel_1 {
                             if chn3 == self.params.channel_2 {
                                 // (213) tau_1 < 0, tau_2 > 0
-                                let tau1 = delta12;
-                                let tau2 = delta23;
+                                let tau1 = delta23;
+                                let tau2 = delta12;
                                 if tau1 < correlation_window && tau2 < correlation_window {
                                     let idx1 = central_bin - tau1 / resolution - 1;
                                     let idx2 = central_bin + tau2 / resolution;
@@ -160,7 +201,7 @@ impl<P: TTTRStream + Iterator> G3<P> {
                         } else if chn2 == self.params.channel_2 {
                             if chn3 == self.params.channel_1 {
                                 // (123) tau_1 > 0, tau_2 > 0
-                                let tau1 = delta12;
+                                let tau1 = delta23;
                                 let tau2 = delta13;
                                 if tau1 < correlation_window && tau2 < correlation_window {
                                     let idx1 = central_bin + tau1 / resolution;
@@ -192,6 +233,7 @@ impl<P: TTTRStream + Iterator> G3<P> {
 }
 
 /// Computes the second order autocorrelation (g3) between two channels on a TCSPC module.
+/// $tau_1$ and $tau_2$ are measured relative to the channel we designate as channel 1.
 ///
 /// ## Parameters
 ///
@@ -202,6 +244,10 @@ impl<P: TTTRStream + Iterator> G3<P> {
 ///    - channel_3: The number of the third input channel into the TCSPC,
 ///    - correlation_window: Length of the correlation window of interest in seconds,
 ///    - resolution: Resolution of the g3 histogram in seconds,
+///
+/// ## Return
+/// A square matrix with the (center_idx, center_idx) index being the (t1=0, t2=0) delays
+/// grow down and to the right. First index is tau1 and second index is tau2.
 ///
 /// ## g^3: Third Order Coincidences
 ///

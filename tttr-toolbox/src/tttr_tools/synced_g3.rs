@@ -76,15 +76,15 @@ impl<P: TTTRStream + Iterator> G3Sync<P> {
                     if tof3 >= tof2 {
                         continue;
                     }
+                    let delta13 = tof1 - tof3;
                     let delta23 = tof2 - tof3;
-                    let delta13 = delta12 + delta23;
 
                     if chn1 == self.params.channel_1 {
                         if chn2 == self.params.channel_2 {
                             if chn3 == self.params.channel_sync {
-                                // 132
+                                // sync -> 2 -> 1
                                 let tau1 = delta13;
-                                let tau2 = delta12;
+                                let tau2 = delta23;
 
                                 let idx1 = (tau1 % self.sync_period) / resolution;
                                 let idx2 = (tau2 % self.sync_period) / resolution;
@@ -97,8 +97,8 @@ impl<P: TTTRStream + Iterator> G3Sync<P> {
                     } else if chn1 == self.params.channel_2 {
                         if chn2 == self.params.channel_1 {
                             if chn3 == self.params.channel_sync {
-                                // 123
-                                let tau1 = delta12;
+                                // sync -> 1 -> 2
+                                let tau1 = delta23;
                                 let tau2 = delta13;
 
                                 let idx1 = (tau1 % self.sync_period) / resolution;
@@ -142,6 +142,10 @@ impl<P: TTTRStream + Iterator> G3Sync<P> {
 ///    - channel_2: The number of the third input channel into the TCSPC,
 ///    - correlation_window: Length of the correlation window of interest in seconds,
 ///    - resolution: Resolution of the g3 histogram in seconds,
+///
+/// ## Return
+/// A square matrix with the (0, 0) index being the (t1=0, t2=0) delays grow down and
+/// to the right. First index is tau1 and second index is tau2.
 pub fn g3_sync(f: &File, params: &G3SyncParams) -> Result<G3SyncResult, Error> {
     let start_record = params.start_record;
     let stop_record = params.stop_record;
