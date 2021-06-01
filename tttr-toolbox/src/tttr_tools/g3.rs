@@ -104,16 +104,16 @@ impl<P: TTTRStream + Iterator> G3<P> {
                     // ch3. That is tau2. Graphically, if we say channel_1 = 1, channel_2 =2
                     // and channel_3 = 3.
                     //
-                    //     tau2
+                    //     tau2; ch3 before ch1 => tau2 < 0
                     //  ┌─────────┐
                     //  ▼         ▼
                     //  3 -> 2 -> 1
                     //  ▲    ▲    ▲
                     //  │    │    │
                     // tof3 tof2 tof1
-                    //   ▲    ▲
-                    //   └────┘
-                    //    tau1
+                    //       ▲    ▲
+                    //       └────┘
+                    //        tau1; ch2 before ch1 => tau1 < 0
                     //
                     // Another example is below
                     if chn1 == self.params.channel_1 {
@@ -149,7 +149,7 @@ impl<P: TTTRStream + Iterator> G3<P> {
                         if chn2 == self.params.channel_1 {
                             if chn3 == self.params.channel_3 {
                                 // (312) tau_1 > 0, tau_2 < 0
-                                //        tau1
+                                //        tau1; ch1 before ch2 => tau1 > 0
                                 //       ┌────┐
                                 //       ▼    ▼
                                 //  3 -> 1 -> 2
@@ -158,7 +158,7 @@ impl<P: TTTRStream + Iterator> G3<P> {
                                 // tof3 tof2 tof1
                                 //   ▲    ▲
                                 //   └────┘
-                                //    tau2
+                                //    tau2; ch3 before ch1 => tau2 < 0
                                 let tau1 = delta12;
                                 let tau2 = delta23;
                                 if tau1 < correlation_window && tau2 < correlation_window {
