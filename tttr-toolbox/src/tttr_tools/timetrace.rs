@@ -59,7 +59,7 @@ impl<P: TTTRStream + Iterator> TimeTrace<P> {
         }
         TimeTraceResult {
             intensity: trace,
-            recnum_trace: recnum_trace,
+            recnum_trace,
         }
     }
 }

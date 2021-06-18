@@ -104,16 +104,16 @@ impl<P: TTTRStream + Iterator> G3<P> {
                     // ch3. That is tau2. Graphically, if we say channel_1 = 1, channel_2 =2
                     // and channel_3 = 3.
                     //
-                    //     tau2; ch3 before ch1 => tau2 < 0
-                    //  ┌─────────┐
-                    //  ▼         ▼
+                    //        tau1; ch2 before ch1 => tau1 < 0
+                    //       ┌────┐
+                    //       ▼    ▼
                     //  3 -> 2 -> 1
                     //  ▲    ▲    ▲
                     //  │    │    │
                     // tof3 tof2 tof1
-                    //       ▲    ▲
-                    //       └────┘
-                    //        tau1; ch2 before ch1 => tau1 < 0
+                    //  ▲         ▲
+                    //  └─────────┘
+                    //     tau2; ch3 before ch1 => tau2 < 0
                     //
                     // Another example is below
                     if chn1 == self.params.channel_1 {

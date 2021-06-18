@@ -283,8 +283,7 @@ pub fn main() -> Result<()> {
                     .unwrap()
                     .parse::<f64>()?,
                 resolution: g2_matches.value_of("resolution").unwrap().parse::<f64>()?,
-                start_record: None,
-                stop_record: None,
+                record_ranges: None,
             };
             let g2_histogram = g2(&ptu_file, &params)?;
 
