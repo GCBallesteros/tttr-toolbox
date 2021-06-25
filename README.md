@@ -11,6 +11,7 @@ crate.
 
 ## Algorithms available
 - second order autocorrelation (g2)
+    - Supports record range selection
 - third order autocorrelation (g3)
 - synced third order autocorrelation (synced g3)
 - intensity time trace
@@ -43,8 +44,7 @@ pub fn main() {
         channel_2: 1,
         correlation_window: 50_000e-12,
         resolution: 600e-12,
-        start_record: None,
-        stop_record: None,
+        record_ranges: None,
     };
     let g2_histogram = g2(&ptu_file, &params).unwrap();
     println!("{:?}", g2_histogram.hist);

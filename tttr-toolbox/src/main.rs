@@ -15,8 +15,8 @@ use tttr_toolbox::headers::File;
 use tttr_toolbox::parsers::ptu::PTUFile;
 use tttr_toolbox::tttr_tools::g2::{g2, G2Params};
 use tttr_toolbox::tttr_tools::g3::{g3, G3Params};
-use tttr_toolbox::tttr_tools::synced_g3::{g3_sync, G3SyncParams};
 use tttr_toolbox::tttr_tools::lifetime::{lifetime, LifetimeParams};
+use tttr_toolbox::tttr_tools::synced_g3::{g3_sync, G3SyncParams};
 use tttr_toolbox::tttr_tools::timetrace::{timetrace, TimeTraceParams};
 
 // ToDo
@@ -25,7 +25,7 @@ use tttr_toolbox::tttr_tools::timetrace::{timetrace, TimeTraceParams};
 
 pub fn main() -> Result<()> {
     let matches = App::new("TTTR Toolbox")
-        .version("0.4")
+        .version("0.4.1")
         .author("Guillem Ballesteros")
         .about("Apply streaming algorithms to TTTR data")
         .arg(

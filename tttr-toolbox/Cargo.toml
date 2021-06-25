@@ -1,6 +1,6 @@
 [package]
 name = "tttr-toolbox"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Guillem Ballesteros <dev+crates@maxwellrules.com>"]
 edition = "2018"
 description = "Fast streaming algorithms for your TTTR data."
