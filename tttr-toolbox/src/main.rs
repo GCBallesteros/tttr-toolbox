@@ -25,7 +25,7 @@ use tttr_toolbox::tttr_tools::timetrace::{timetrace, TimeTraceParams};
 
 pub fn main() -> Result<()> {
     let matches = App::new("TTTR Toolbox")
-        .version("0.4.1")
+        .version("0.4.2")
         .author("Guillem Ballesteros")
         .about("Apply streaming algorithms to TTTR data")
         .arg(
