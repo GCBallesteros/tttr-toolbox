@@ -1,8 +1,10 @@
-use crate::errors::Error;
-use crate::headers::{File, RecordType};
-use crate::parsers::ptu;
-use crate::tttr_tools::colored_circular_buffer::CCircularBuffer;
-use crate::{Click, TTTRFile, TTTRStream};
+use crate::{
+    errors::Error,
+    headers::{File, RecordType},
+    parsers::ptu,
+    tttr_tools::colored_circular_buffer::CCircularBuffer,
+    {Click, TTTRFile, TTTRStream},
+};
 use std::fmt::Debug;
 
 use ndarray::Array2;
@@ -58,8 +60,11 @@ impl<P: TTTRStream + Iterator> G3<P> {
 
         let mut click_buffer = CCircularBuffer::new(MAX_BUFFER_SIZE);
 
-        let relevant_channels: Vec<i32> =
-            vec![self.params.channel_1, self.params.channel_2, self.params.channel_3];
+        let relevant_channels: Vec<i32> = vec![
+            self.params.channel_1,
+            self.params.channel_2,
+            self.params.channel_3,
+        ];
 
         for click_1 in self.click_stream.into_iter() {
             let (&tof1, &chn1) = (click_1.tof(), click_1.channel());
@@ -130,8 +135,7 @@ impl<P: TTTRStream + Iterator> G3<P> {
                                     break;
                                 }
                             }
-                        } 
-                        else if chn2 == self.params.channel_3 {
+                        } else if chn2 == self.params.channel_3 {
                             if chn3 == self.params.channel_2 {
                                 // (231) tau_1 < 0, tau_2 < 0
                                 let tau1 = delta13;
@@ -183,8 +187,7 @@ impl<P: TTTRStream + Iterator> G3<P> {
                                 }
                             }
                         }
-                    }
-                    else if chn1 == self.params.channel_3 {
+                    } else if chn1 == self.params.channel_3 {
                         if chn2 == self.params.channel_1 {
                             if chn3 == self.params.channel_2 {
                                 // (213) tau_1 < 0, tau_2 > 0
