@@ -1,16 +1,18 @@
-use crate::errors::Error;
-use crate::headers::{File, RecordType};
-use crate::parsers::ptu;
-use crate::{tttr_tools::circular_buffer::CircularBuffer, Click, TTTRFile, TTTRStream};
+use crate::{
+    errors::Error,
+    headers::{File, RecordType},
+    parsers::ptu,
+    tttr_tools::{
+        circular_buffer::CircularBuffer,
+        g2::{G2Params, G2Result},
+    },
+    Click, TTTRFile, TTTRStream,
+};
 use std::fmt::Debug;
 
 const MAX_BUFFER_SIZE: usize = 4096;
 
-// ToDo
-// Streamer params and G2Params should probably be different here
-
-struct G2 {
-    central_bin: u64,
+struct G2Asymetric {
     n_bins: u64,
     resolution: u64,
     correlation_window: u64,
@@ -19,29 +21,7 @@ struct G2 {
     channel_2: i32,
 }
 
-/// Result from the g2 algorithm
-pub struct G2Result {
-    pub t: Vec<f64>,
-    pub hist: Vec<u64>,
-}
-
-/// Parameters for the g2 algorithm
-///
-/// # Parameters
-///    - channel_1: The number of the first input channel into the TCSPC
-///    - channel_2: The number of the second input channel into the TCSPC
-///    - correlation_window: Length of the correlation window of interest in seconds
-///    - resolution: Resolution of the g2 histogram in seconds
-#[derive(Debug, Clone)]
-pub struct G2Params {
-    pub channel_1: i32,
-    pub channel_2: i32,
-    pub correlation_window: f64,
-    pub resolution: f64,
-    pub record_ranges: Option<Vec<(usize, usize)>>,
-}
-
-impl G2 {
+impl G2Asymetric {
     fn init(params: &G2Params, time_resolution: f64) -> Self {
         let real_resolution = params.resolution.clone();
         let n_bins = (params.correlation_window / params.resolution) as u64;
@@ -49,12 +29,8 @@ impl G2 {
 
         let resolution = (correlation_window / (n_bins as f64)) as u64;
         let correlation_window = n_bins * resolution;
-        let n_bins = n_bins * 2;
-
-        let central_bin = n_bins / 2;
 
         Self {
-            central_bin,
             n_bins,
             resolution,
             correlation_window,
@@ -73,7 +49,6 @@ impl G2 {
         <P as Iterator>::Item: Debug + Click,
     {
         let mut buff_1 = CircularBuffer::new(MAX_BUFFER_SIZE);
-        let mut buff_2 = CircularBuffer::new(MAX_BUFFER_SIZE);
 
         // Substractions between u64 below are safe from over/underflows due to
         // algorithm invariants.
@@ -84,23 +59,11 @@ impl G2 {
 
             if channel == self.channel_1 {
                 buff_1.push(tof);
-
-                for click in buff_2.iter() {
-                    let delta = tof - click;
-                    if delta < self.correlation_window {
-                        let hist_idx = self.central_bin - delta / self.resolution - 1;
-                        out_hist[hist_idx as usize] += 1;
-                    } else {
-                        break;
-                    }
-                }
             } else if channel == self.channel_2 {
-                buff_2.push(tof);
-
                 for click in buff_1.iter() {
                     let delta = tof - click;
                     if delta < self.correlation_window {
-                        let hist_idx = self.central_bin + delta / self.resolution;
+                        let hist_idx = delta / self.resolution;
                         out_hist[hist_idx as usize] += 1;
                     } else {
                         break;
@@ -110,7 +73,7 @@ impl G2 {
         }
 
         for i in 0..self.n_bins {
-            out_t[i as usize] = ((i as f64) - (self.central_bin as f64)) * self.real_resolution
+            out_t[i as usize] = (i as f64) * self.real_resolution
         }
     }
 }
@@ -158,11 +121,11 @@ impl G2 {
 /// this should be more than enough to capture any relevant dynamics. If this is
 /// not the case for you will need to modify the hard coded maximum buffer size
 /// defined on `src/tttr_tools/g2.rs`.
-pub fn g2(f: &File, params: &G2Params) -> Result<G2Result, Error> {
+pub(super) fn g2(f: &File, params: &G2Params) -> Result<G2Result, Error> {
     match f {
         File::PTU(x) => match x.record_type().unwrap() {
             RecordType::PHT2 => {
-                let tt = G2::init(params, x.time_resolution()?);
+                let tt = G2Asymetric::init(params, x.time_resolution()?);
                 let mut g2_histogram = vec![0; tt.n_bins as usize];
                 let mut t_histogram = vec![0.0; tt.n_bins as usize];
 
@@ -185,7 +148,7 @@ pub fn g2(f: &File, params: &G2Params) -> Result<G2Result, Error> {
                 })
             }
             RecordType::HHT2_HH1 => {
-                let tt = G2::init(params, x.time_resolution()?);
+                let tt = G2Asymetric::init(params, x.time_resolution()?);
                 let mut g2_histogram = vec![0; tt.n_bins as usize];
                 let mut t_histogram = vec![0.0; tt.n_bins as usize];
 
@@ -208,7 +171,7 @@ pub fn g2(f: &File, params: &G2Params) -> Result<G2Result, Error> {
                 })
             }
             RecordType::HHT2_HH2 => {
-                let tt = G2::init(params, x.time_resolution()?);
+                let tt = G2Asymetric::init(params, x.time_resolution()?);
                 let mut g2_histogram = vec![0; tt.n_bins as usize];
                 let mut t_histogram = vec![0.0; tt.n_bins as usize];
 
@@ -231,7 +194,7 @@ pub fn g2(f: &File, params: &G2Params) -> Result<G2Result, Error> {
                 })
             }
             RecordType::HHT3_HH2 => {
-                let tt = G2::init(params, 1e-12);
+                let tt = G2Asymetric::init(params, 1e-12);
                 let mut g2_histogram = vec![0; tt.n_bins as usize];
                 let mut t_histogram = vec![0.0; tt.n_bins as usize];
 

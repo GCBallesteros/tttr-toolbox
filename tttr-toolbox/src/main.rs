@@ -11,13 +11,17 @@ extern crate tttr_toolbox_proc_macros;
 
 use clap::{App, Arg, SubCommand};
 
-use tttr_toolbox::headers::File;
-use tttr_toolbox::parsers::ptu::PTUFile;
-use tttr_toolbox::tttr_tools::g2::{g2, G2Params};
-use tttr_toolbox::tttr_tools::g3::{g3, G3Params};
-use tttr_toolbox::tttr_tools::lifetime::{lifetime, LifetimeParams};
-use tttr_toolbox::tttr_tools::synced_g3::{g3_sync, G3SyncParams};
-use tttr_toolbox::tttr_tools::timetrace::{timetrace, TimeTraceParams};
+use tttr_toolbox::{
+    headers::File,
+    parsers::ptu::PTUFile,
+    tttr_tools::{
+        g2::{g2, G2Mode, G2Params},
+        g3::{g3, G3Params},
+        lifetime::{lifetime, LifetimeParams},
+        synced_g3::{g3_sync, G3SyncParams},
+        timetrace::{timetrace, TimeTraceParams},
+    },
+};
 
 // ToDo
 // 1. Check magic number for PTU
@@ -285,7 +289,7 @@ pub fn main() -> Result<()> {
                 resolution: g2_matches.value_of("resolution").unwrap().parse::<f64>()?,
                 record_ranges: None,
             };
-            let g2_histogram = g2(&ptu_file, &params)?;
+            let g2_histogram = g2(&ptu_file, &params, G2Mode::Symmetric)?;
 
             let mut npz = NpzWriter::new(std::fs::File::create(
                 g2_matches.value_of("output").unwrap(),
