@@ -1,9 +1,9 @@
 [package]
 name = "tttr-toolbox-proc-macros"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Guillem Ballesteros <dev+crate@maxwellrules.com>"]
 edition = "2018"
-description = "Proc macros for ttt-toolbox"
+description = "Proc macros for tttr-toolbox"
 repository = "https://github.com/GCBallesteros/tttr-toolbox"
 homepage = "https://github.com/GCBallesteros/tttr-toolbox"
 license = "MIT"

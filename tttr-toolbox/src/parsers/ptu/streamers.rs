@@ -109,6 +109,7 @@ pub struct HHT3_HH2Stream {
     // todo: make it just with a trait that implements readbuf
     source: BufReader<std::fs::File>,
     click_buffer: [u32; BUFFER_SIZE],
+    effective_buffer_size: u32,
     num_records: usize,
     time_resolution: f64,
     photons_in_buffer: i32,
@@ -158,6 +159,7 @@ impl HHT3_HH2Stream {
         Ok(Self {
             source: buffered,
             click_buffer: [0; BUFFER_SIZE],
+            effective_buffer_size: 0,
             num_records: (last_record - record_offset) as usize,
             time_resolution: 1e-12,
             photons_in_buffer: 0,
@@ -228,23 +230,28 @@ impl Iterator for HHT3_HH2Stream {
 
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
+        if self.click_count >= self.num_records {
+            return None;
+        }
         if self.photons_in_buffer == 0 {
+            let records_remaining = self.num_records - self.click_count;
+            let clicks_requested = if records_remaining < BUFFER_SIZE {
+                records_remaining
+            } else {
+                BUFFER_SIZE
+            };
             let read_res = self
                 .source
-                .read_u32_into::<NativeEndian>(&mut self.click_buffer[..]);
+                .read_u32_into::<NativeEndian>(&mut self.click_buffer[..clicks_requested]);
             if let Err(_x) = read_res {
-                //if self.click_count < self.num_records {
-                //println!("Missed {}", self.num_records - self.click_count);
-                //}
                 return None;
             };
-            if self.click_count >= self.num_records {
-                return None;
-            };
-            self.photons_in_buffer = BUFFER_SIZE as i32;
+            self.effective_buffer_size = clicks_requested as u32;
+            self.photons_in_buffer = clicks_requested as i32;
         }
 
-        let current_photon = ((BUFFER_SIZE as i32) - self.photons_in_buffer) as usize;
+        let current_photon =
+            ((self.effective_buffer_size as i32) - self.photons_in_buffer) as usize;
         self.photons_in_buffer -= 1;
         self.click_count += 1;
         Some(self.parse_record(self.click_buffer[current_photon]))

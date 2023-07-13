@@ -1,8 +1,8 @@
 extern crate proc_macro;
 use proc_macro::TokenStream;
-use quote::{quote, format_ident};
+use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream, Result};
-use syn::{parse_macro_input, Expr, Ident, bracketed, token, Token, Type};
+use syn::{bracketed, parse_macro_input, token, Expr, Ident, Token, Type};
 
 struct PTUTagRead {
     header: Ident,
@@ -19,11 +19,7 @@ impl Parse for PTUTagRead {
         input.parse::<Token![as]>()?;
         let ty: Type = input.parse()?;
 
-        Ok(PTUTagRead {
-			header,
-            ty,
-            key,
-        })
+        Ok(PTUTagRead { header, ty, key })
     }
 }
 
@@ -31,14 +27,9 @@ impl Parse for PTUTagRead {
 // read_ptu_tag!(header[SOME_VALUE] as Int8);
 #[proc_macro]
 pub fn read_ptu_tag(input: TokenStream) -> TokenStream {
-    let PTUTagRead {
-        header,
-        ty,
-        key,
-    } = parse_macro_input!(input as PTUTagRead);
+    let PTUTagRead { header, ty, key } = parse_macro_input!(input as PTUTagRead);
 
-
-    let output = quote!{
+    let output = quote! {
         if let PTUTag::#ty(x) = #header
             .get(#key)
             .ok_or_else(|| Error::InvalidHeader(String::from(
@@ -60,12 +51,13 @@ pub fn make_ptu_stream(args: TokenStream, item: TokenStream) -> TokenStream {
     let stream_type = parse_macro_input!(args as syn::Ident);
     let stream_name = format_ident!("{}Stream", stream_type);
 
-    let output = quote!{
+    let output = quote! {
         #[allow(non_camel_case_types)]
         pub struct #stream_name {
             // todo: make it just with a trait that implements readbuf
             source: BufReader<std::fs::File>,
             click_buffer: [u32; BUFFER_SIZE],
+            effective_buffer_size: u32,
             num_records: usize,
             time_resolution: f64,
             photons_in_buffer: i32,
@@ -99,6 +91,7 @@ pub fn make_ptu_stream(args: TokenStream, item: TokenStream) -> TokenStream {
                 Ok(Self {
                     source: buffered,
                     click_buffer: [0; BUFFER_SIZE],
+                    effective_buffer_size: 0,
                     num_records: (last_record - record_offset) as usize,
                     time_resolution: ptu_file.time_resolution()?,
                     photons_in_buffer: 0,
@@ -119,27 +112,37 @@ pub fn make_ptu_stream(args: TokenStream, item: TokenStream) -> TokenStream {
         impl Iterator for #stream_name {
             type Item = TTTRRecord;
 
-            #[inline(always)]
-            fn next(&mut self) -> Option<Self::Item> {
-                if self.photons_in_buffer == 0 {
-                    let read_res = self.source.read_u32_into::<NativeEndian>(&mut self.click_buffer[..]);
-                    if let Err(_x) = read_res {
-                        //if self.click_count < self.num_records {
-                            //println!("Missed {}", self.num_records - self.click_count);
-                        //}
-                        return None
-                    };
-                    if self.click_count >= self.num_records {return None};
-                    self.photons_in_buffer = BUFFER_SIZE as i32;
-                }
-
-                let current_photon = ((BUFFER_SIZE as i32) - self.photons_in_buffer) as usize;
-                self.photons_in_buffer -= 1;
-                self.click_count += 1;
-                Some(self.parse_record(self.click_buffer[current_photon]))
+        #[inline(always)]
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.click_count >= self.num_records {
+                return None;
             }
+            if self.photons_in_buffer == 0 {
+                let records_remaining = self.num_records - self.click_count;
+                let clicks_requested = if records_remaining < BUFFER_SIZE {
+                    records_remaining
+                } else {
+                    BUFFER_SIZE
+                };
+                let read_res = self
+                    .source
+                    .read_u32_into::<NativeEndian>(&mut self.click_buffer[..clicks_requested]);
+                if let Err(_x) = read_res {
+                    return None;
+                };
+                self.effective_buffer_size = clicks_requested as u32;
+                self.photons_in_buffer = clicks_requested as i32;
+            }
+
+            let current_photon =
+                ((self.effective_buffer_size as i32) - self.photons_in_buffer) as usize;
+            self.photons_in_buffer -= 1;
+            self.click_count += 1;
+            Some(self.parse_record(self.click_buffer[current_photon]))
+        }
+
+
         }
     };
     output.into()
 }
-
