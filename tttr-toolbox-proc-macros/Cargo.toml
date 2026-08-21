@@ -1,9 +1,9 @@
 [package]
-name = "tttr-toolbox-proc-macros"
+name = "tttr-toolbox-proc-macros-arrays"
 version = "0.1.2"
 authors = ["Zhe Xian, Koong <koong898@gmail.com>"]
 edition = "2018"
-description = "Proc macros for tttr-toolbox"
+description = "Proc macros for tttr-toolbox-arrays"
 repository = "https://github.com/zak489/tttr-toolbox-arrays"
 homepage = "https://github.com/zak489/tttr-toolbox-arrays"
 license = "MIT"
