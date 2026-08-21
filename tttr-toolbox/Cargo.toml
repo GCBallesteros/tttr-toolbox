@@ -1,11 +1,11 @@
 [package]
-name = "tttr-toolbox"
+name = "tttr-toolbox-arrays"
 version = "0.5.0"
-authors = ["Guillem Ballesteros <dev+crates@maxwellrules.com>"]
+authors = ["Zhe Xian, Koong <koong898@gmail.com>"]
 edition = "2018"
 description = "Fast streaming algorithms for your TTTR data."
-repository = "https://github.com/GCBallesteros/tttr-toolbox"
-homepage = "https://github.com/GCBallesteros/tttr-toolbox"
+repository = "https://github.com/zak489/tttr-toolbox-arrays"
+homepage = "https://github.com/zak489/tttr-toolbox-arrays"
 keywords = ["scientific-computing", "science"]
 license = "MIT"
 readme = "README.md"
