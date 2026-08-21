@@ -121,6 +121,39 @@ impl G2Asymetric {
 /// this should be more than enough to capture any relevant dynamics. If this is
 /// not the case for you will need to modify the hard coded maximum buffer size
 /// defined on `src/tttr_tools/g2.rs`.
+
+pub(super) fn g2_from_stream<P>(
+    streamer: P,
+    params: &G2Params,
+    time_resolution: f64,
+) -> G2Result
+where
+    P: TTTRStream + Iterator,
+    <P as Iterator>::Item: Debug + Click,
+{
+    let tt = G2Asymetric::init(
+        params,
+        time_resolution,
+    );
+
+    let mut g2_histogram =
+        vec![0; tt.n_bins as usize];
+
+    let mut t_histogram =
+        vec![0.0; tt.n_bins as usize];
+
+    tt.compute(
+        streamer,
+        &mut g2_histogram,
+        &mut t_histogram,
+    );
+
+    G2Result {
+        hist: g2_histogram,
+        t: t_histogram,
+    }
+}
+
 pub(super) fn g2(f: &File, params: &G2Params) -> Result<G2Result, Error> {
     match f {
         File::PTU(x) => match x.record_type().unwrap() {

@@ -6,8 +6,6 @@ use std::path::PathBuf;
 
 use num_traits::FromPrimitive;
 
-use pyo3;
-
 use crate::errors::Error;
 use crate::headers;
 use crate::TTTRFile;
@@ -27,24 +25,6 @@ pub enum PTUTag {
     AnsiString8(String),
     WideString(String),
     BinaryBlob(Vec<u8>),
-}
-
-impl pyo3::ToPyObject for PTUTag {
-    fn to_object(&self, py: pyo3::Python) -> pyo3::PyObject {
-        match self {
-            PTUTag::Empty8 => (py.None(), "Empty8").to_object(py),
-            PTUTag::Bool8(x) => (x, "Bool8").to_object(py),
-            PTUTag::Int8(x) => (x, "Int8").to_object(py),
-            PTUTag::BitSet64(x) => (x, "BitSet64").to_object(py),
-            PTUTag::Color8(x) => (x, "Color8").to_object(py),
-            PTUTag::Float8(x) => (x, "Float8").to_object(py),
-            PTUTag::TDateTime(x) => (x, "TDateTime").to_object(py),
-            PTUTag::Float8Array(x) => (x, "Float8Array").to_object(py),
-            PTUTag::AnsiString8(x) => (x, "AnsiString8").to_object(py),
-            PTUTag::WideString(x) => (x, "WideString").to_object(py),
-            PTUTag::BinaryBlob(x) => (x, "BinaryBlob").to_object(py),
-        }
-    }
 }
 
 #[derive(FromPrimitive, ToPrimitive, Debug)]
