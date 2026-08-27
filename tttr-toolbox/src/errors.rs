@@ -15,4 +15,6 @@ pub enum Error {
     InvalidHeader(String),
     #[error("{0}")]
     NotImplemented(String),
+	#[error("Invalid TTTR array input: {0}")]
+	InvalidInput(String),
 }

@@ -1,11 +1,11 @@
 [package]
-name = "tttr-toolbox-proc-macros"
-version = "0.1.1"
-authors = ["Guillem Ballesteros <dev+crate@maxwellrules.com>"]
+name = "tttr-toolbox-proc-macros-arrays"
+version = "0.1.2"
+authors = ["Zhe Xian, Koong <koong898@gmail.com>"]
 edition = "2018"
-description = "Proc macros for tttr-toolbox"
-repository = "https://github.com/GCBallesteros/tttr-toolbox"
-homepage = "https://github.com/GCBallesteros/tttr-toolbox"
+description = "Proc macros for tttr-toolbox-arrays"
+repository = "https://github.com/zak489/tttr-toolbox-arrays"
+homepage = "https://github.com/zak489/tttr-toolbox-arrays"
 license = "MIT"
 keywords = ["scientific-computing", "science"]
 

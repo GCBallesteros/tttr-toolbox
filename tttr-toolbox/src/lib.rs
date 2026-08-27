@@ -61,6 +61,8 @@ pub mod headers;
 pub mod parsers;
 pub mod tttr_tools;
 
+mod array_stream;
+
 pub(crate) trait TTTRStream {
     type RecordSize;
     fn parse_record(&mut self, raw_record: Self::RecordSize) -> TTTRRecord;

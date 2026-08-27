@@ -3,6 +3,7 @@ use crate::headers::{File, RecordType};
 use crate::parsers::ptu;
 use crate::{Click, TTTRFile, TTTRStream};
 use std::fmt::Debug;
+use crate::array_stream::ArrayStream;
 
 struct TimeTrace<P: TTTRStream + Iterator> {
     pub click_stream: P,
@@ -79,6 +80,28 @@ impl<P: TTTRStream + Iterator> TimeTrace<P> {
 /// limit to how fine the time resolution can be. Finer resolutions lead to smaller numbers
 /// of clicks per interval and therefore the relative error for the number of counts
 /// grows as we make intervals finer.
+
+pub fn timetrace_from_arrays(
+    timestamps_ps: &[u64],
+    channels: &[i32],
+    params: &TimeTraceParams,
+) -> Result<TimeTraceResult, Error> {
+
+    let stream = ArrayStream::new(
+        timestamps_ps,
+        channels,
+        None,
+        None,
+    )?;
+
+    let tt = TimeTrace {
+        click_stream: stream,
+        params: *params,
+    };
+
+    Ok(tt.compute())
+}
+
 pub fn timetrace(f: &File, params: &TimeTraceParams) -> Result<TimeTraceResult, Error> {
     let start_record = None;
     let stop_record = None;
